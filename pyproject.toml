@@ -1,0 +1,7 @@
+[project]
+name = "gatetosovngarde"
+version = "0.1.0"
+description = "A comprehensive list of script/gui used for managing Gate To Sovngarde modlist"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = []
