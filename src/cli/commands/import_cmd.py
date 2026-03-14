@@ -15,6 +15,10 @@ from typing import Optional
 import typer
 
 from ..db import DatabaseLoader
+from ..models.import_result import ImportResult
+from ..services.import_service import ImportService
+from ..utils.errors import ValidationError
+from ..utils.output import success, error, progress
 
 
 def import_cmd(
@@ -104,10 +108,133 @@ def import_cmd(
     else:
         dest_path = Path(dest_path)
 
-    # Phase 4 will implement the actual import logic
-    # For now, validate and show what would be done
-    if verbose:
-        typer.echo(f"Version: {version}")
-        typer.echo(f"Source: {source_path}")
-        typer.echo(f"Destination: {dest_path}")
-        typer.echo(f"Force: {force}")
+    # Parameter validation
+    try:
+        _validate_parameters(version, source_path, dest_path)
+    except ValidationError as e:
+        error(str(e))
+        raise typer.Exit(code=1)
+
+    # Execute import
+    try:
+        service = ImportService()
+        result = service.execute(version, source_path, dest_path, force)
+
+        # Display results
+        _display_results(result, version, verbose)
+
+        # Set exit code based on results
+        if result.success:
+            raise typer.Exit(code=0)
+        else:
+            raise typer.Exit(code=2)
+
+    except KeyboardInterrupt:
+        error("\nImport interrupted by user")
+        raise typer.Exit(code=2)
+    except typer.Exit:
+        # Re-raise typer.Exit exceptions without catching them
+        raise
+    except Exception as e:
+        error(f"Import failed: {str(e)}")
+        raise typer.Exit(code=2)
+
+
+def _validate_parameters(
+    version: str,
+    source_path: Path,
+    dest_path: Path,
+) -> None:
+    """Validate import parameters.
+
+    Args:
+        version: GTS version to validate
+        source_path: Source directory to validate
+        dest_path: Destination directory to validate
+
+    Raises:
+        ValidationError: If any parameter is invalid
+    """
+    # Validate version exists
+    loader = DatabaseLoader()
+    if not loader.validate_version_exists(version):
+        available = ", ".join(loader.list_versions())
+        raise ValidationError(
+            f"Unknown version: {version}\nAvailable versions: {available}"
+        )
+
+    # Validate source directory exists
+    if not source_path.exists():
+        raise ValidationError(f"Source directory not found: {source_path}")
+
+    if not source_path.is_dir():
+        raise ValidationError(f"Source path is not a directory: {source_path}")
+
+    # Validate source is readable
+    try:
+        list(source_path.iterdir())
+    except PermissionError:
+        raise ValidationError(f"Source directory not readable: {source_path}")
+
+    # Validate destination is writable or creatable
+    try:
+        if dest_path.exists() and not dest_path.is_dir():
+            raise ValidationError(
+                f"Destination exists but is not a directory: {dest_path}"
+            )
+
+        # Try to create destination if needed
+        dest_path.mkdir(parents=True, exist_ok=True)
+
+        # Verify we can write to destination
+        test_file = dest_path / ".write_test_12345"
+        try:
+            test_file.touch()
+            test_file.unlink()
+        except (PermissionError, OSError):
+            raise ValidationError(f"Destination directory not writable: {dest_path}")
+    except ValidationError:
+        raise
+    except Exception as e:
+        raise ValidationError(f"Cannot create/access destination: {str(e)}")
+
+
+def _display_results(result: ImportResult, version: str, verbose: bool) -> None:
+    """Display import results to user.
+
+    Args:
+        result: The ImportResult object with statistics
+        version: The GTS version that was imported
+        verbose: Whether to show detailed output
+    """
+    # Display summary
+    if result.success:
+        success(
+            f"✓ Import completed successfully ({version})\n"
+            f"  Mods imported: {result.mods_imported}\n"
+            f"  Files copied: {result.files_copied}\n"
+            f"  Duration: {result.duration:.2f}s"
+        )
+    elif result.partial_success:
+        typer.echo(
+            f"⚠ Import completed with errors ({version})\n"
+            f"  Mods imported: {result.mods_imported}\n"
+            f"  Files copied: {result.files_copied}\n"
+            f"  Errors: {len(result.errors)}\n"
+            f"  Duration: {result.duration:.2f}s"
+        )
+    else:
+        error(
+            f"✗ Import failed ({version})\n"
+            f"  Files copied: {result.files_copied}\n"
+            f"  Errors: {len(result.errors)}"
+        )
+
+    # Display errors if any
+    if result.errors:
+        typer.echo("\nErrors encountered:")
+        for err in result.errors:
+            typer.echo(f"  [{err.error_type}] {err.mod_id}: {err.message}")
+            if not verbose:
+                continue
+            typer.echo(f"    → {err.recovery_suggestion}")

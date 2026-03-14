@@ -240,85 +240,85 @@ All tasks follow this format:
 
 ### 4.1 Import Command Core Logic
 
-- [ ] T027 Create `src/cli/commands/import_cmd.py` implementation:
-  - Function signature: `import_cmd(version: str, source_path: Path, dest_path: Path, force: bool = False, verbose: bool = False)`
-  - Parameter validation:
-    - Validate version exists via DatabaseLoader
-    - Validate source_path exists and is readable
-    - Validate dest_path is writable or creatable
-    - Raise CLIError if any validation fails
-  - Load GTS database for specified version
-  - Return result object (for testing)
+- [x] T027 Create `src/cli/commands/import_cmd.py` implementation:
+   - Function signature: `import_cmd(version: str, source_path: Path, dest_path: Path, force: bool = False, verbose: bool = False)`
+   - Parameter validation:
+     - Validate version exists via DatabaseLoader
+     - Validate source_path exists and is readable
+     - Validate dest_path is writable or creatable
+     - Raise CLIError if any validation fails
+   - Load GTS database for specified version
+   - Return result object (for testing)
 
-- [ ] T028 [P] Create `src/cli/services/import_service.py`:
-  - Class: `ImportService`
-  - Method: `execute(version: str, source: Path, dest: Path, force: bool) -> ImportResult`
-  - Loads mods from database
-  - Iterates through mods and copies required files
-  - Tracks success/failure statistics
-  - Raises OperationError on file I/O failures
+- [x] T028 [P] Create `src/cli/services/import_service.py`:
+   - Class: `ImportService`
+   - Method: `execute(version: str, source: Path, dest: Path, force: bool) -> ImportResult`
+   - Loads mods from database
+   - Iterates through mods and copies required files
+   - Tracks success/failure statistics
+   - Raises OperationError on file I/O failures
 
-- [ ] T029 [P] Create import result tracking in `src/cli/models/import_result.py`:
-  - Class: `ImportResult`
-  - Fields: `mods_imported: int`, `files_copied: int`, `duration: float`, `errors: list[ImportError]`
-  - Class: `ImportError`
-  - Fields: `mod_id: str`, `error_type: str`, `message: str`, `recovery_suggestion: str`
+- [x] T029 [P] Create import result tracking in `src/cli/models/import_result.py`:
+   - Class: `ImportResult`
+   - Fields: `mods_imported: int`, `files_copied: int`, `duration: float`, `errors: list[ImportError]`
+   - Class: `ImportError`
+   - Fields: `mod_id: str`, `error_type: str`, `message: str`, `recovery_suggestion: str`
 
 ### 4.2 Progress & Output
 
-- [ ] T030 Implement progress feedback in import command:
-  - Display "Importing mods: X/Y (Z%)" every 5 seconds or after 10 files
-  - Use Rich progress bar or status indicator
-  - Show current mod being processed
-  - Display completion summary with counts and duration
+- [x] T030 Implement progress feedback in import command:
+   - Display "Importing mods: X/Y (Z%)" every 5 seconds or after 10 files
+   - Use Rich progress bar or status indicator
+   - Show current mod being processed
+   - Display completion summary with counts and duration
 
-- [ ] T031 [P] Create error reporting in `src/cli/commands/import_cmd.py`:
-  - Collect all errors during import (don't stop on first)
-  - Display errors with recovery suggestions at end
-  - Exit with code 0 if all successful, 2 if any failures
+- [x] T031 [P] Create error reporting in `src/cli/commands/import_cmd.py`:
+   - Collect all errors during import (don't stop on first)
+   - Display errors with recovery suggestions at end
+   - Exit with code 0 if all successful, 2 if any failures
 
 ### 4.3 File Operations
 
-- [ ] T032 [P] Implement safe file copying in ImportService:
-  - Check destination space availability
-  - Handle file permission errors gracefully
-  - Support `--force` flag to overwrite existing files
-  - Verify file integrity after copy (optional: checksum)
+- [x] T032 [P] Implement safe file copying in ImportService:
+   - Check destination space availability
+   - Handle file permission errors gracefully
+   - Support `--force` flag to overwrite existing files
+   - Verify file integrity after copy (optional: checksum)
 
-- [ ] T033 [P] Add interrupt handling (Ctrl+C):
-  - Catch KeyboardInterrupt during import
-  - Display "Import interrupted by user after X seconds"
-  - Do NOT delete partially imported files (allows resume)
-  - Exit with code 2
+- [x] T033 [P] Add interrupt handling (Ctrl+C):
+   - Catch KeyboardInterrupt during import
+   - Display "Import interrupted by user after X seconds"
+   - Do NOT delete partially imported files (allows resume)
+   - Exit with code 2
 
 ### 4.4 Import Command Tests (TDD)
 
-- [ ] T034 [US1] Create `tests/unit/test_import_cmd.py`:
-  - Test: `test_import_valid_arguments()` - accepts VERSION SOURCE DEST
-  - Test: `test_import_invalid_version()` - rejects unknown GTS version
-  - Test: `test_import_source_not_found()` - rejects non-existent source
-  - Test: `test_import_dest_not_writable()` - rejects unwritable destination
-  - Test: `test_import_with_force_flag()` - respects --force option
-  - Test: `test_import_with_verbose_flag()` - respects --verbose option
+- [x] T034 [US1] Create `tests/unit/test_import_cmd.py`:
+   - Test: `test_import_valid_arguments()` - accepts VERSION SOURCE DEST
+   - Test: `test_import_invalid_version()` - rejects unknown GTS version
+   - Test: `test_import_source_not_found()` - rejects non-existent source
+   - Test: `test_import_dest_not_writable()` - rejects unwritable destination
+   - Test: `test_import_with_force_flag()` - respects --force option
+   - Test: `test_import_with_verbose_flag()` - respects --verbose option
 
-- [ ] T035 [P] [US1] Create `tests/unit/test_import_service.py`:
-  - Test: `test_execute_copies_files()` - ImportService copies mod files
-  - Test: `test_execute_tracks_statistics()` - ImportResult counts accurate
-  - Test: `test_execute_handles_missing_files()` - graceful handling of missing files
-  - Test: `test_execute_permission_errors()` - handles permission denied errors
+- [x] T035 [P] [US1] Create `tests/unit/test_import_service.py`:
+   - Test: `test_execute_copies_files()` - ImportService copies mod files
+   - Test: `test_execute_tracks_statistics()` - ImportResult counts accurate
+   - Test: `test_execute_handles_missing_files()` - graceful handling of missing files
+   - Test: `test_execute_permission_errors()` - handles permission denied errors
 
-- [ ] T036 [P] [US1] Create `tests/integration/test_import_workflow.py`:
-  - Test: `test_complete_import_workflow()` - full end-to-end import with temp directories
-  - Test: `test_import_with_multiple_mods()` - imports multiple mods correctly
-  - Test: `test_import_handles_duplicates_without_force()` - fails when files exist
-  - Test: `test_import_handles_duplicates_with_force()` - overwrites with --force
-  - Setup: Create temp source and dest directories, populate with test files
+- [x] T036 [P] [US1] Create `tests/integration/test_import_workflow.py`:
+   - Test: `test_complete_import_workflow()` - full end-to-end import with temp directories
+   - Test: `test_import_with_multiple_mods()` - imports multiple mods correctly
+   - Test: `test_import_handles_duplicates_without_force()` - fails when files exist
+   - Test: `test_import_handles_duplicates_with_force()` - overwrites with --force
+   - Setup: Create temp source and dest directories, populate with test files
 
-- [ ] T037 [US1] Create `tests/contract/test_import_contract.py`:
-  - Test: `test_import_help_displays()` - `gts import --help` shows proper help
-  - Test: `test_import_success_output()` - successful import displays ✓ message
-  - Test: `test_import_error_output()` - failed import displays error with recovery
-  - Test: `test_import_exit_codes()` - 0 (success), 1 (validation), 2 (runtime)
+- [x] T037 [US1] Create `tests/contract/test_import_contract.py`:
+   - Test: `test_import_help_displays()` - `gts import --help` shows proper help
+   - Test: `test_import_success_output()` - successful import displays ✓ message
+   - Test: `test_import_error_output()` - failed import displays error with recovery
+   - Test: `test_import_exit_codes()` - 0 (success), 1 (validation), 2 (runtime)
 
 ---
 
