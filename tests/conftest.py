@@ -14,15 +14,12 @@ Example usage in tests:
         assert result.exit_code == 0
 """
 
-import json
 import tempfile
-from pathlib import Path
 from typing import Iterator, Tuple
 
 import pytest
 from typer.testing import CliRunner
 
-from cli import __version__
 from cli.db import DatabaseLoader
 
 
@@ -69,18 +66,18 @@ def temp_directories() -> Iterator[Tuple[str, str]]:
 
 @pytest.fixture
 def mock_database() -> dict:
-    """Provide a sample GTS database for unit testing.
+    """Provide a sample GTS database for unit testing with archived mods.
 
     Returns a dictionary representing a GTS version database with
-    3 sample mods. Useful for testing database-related functions
+    3 sample archived mods. Useful for testing database-related functions
     without relying on bundled database files.
 
     Returns:
         Dictionary with keys:
         - version_id: "GTSv101"
-        - version_name: "GateToSovngarde v1.01"
+        - version_name: "GateToSovngarde v1.01 - Archived Mods"
         - created_date: "2026-03-14"
-        - mods: List of 3 sample mod dictionaries
+        - mods: List of 3 sample mod dictionaries with archive file support
 
     Example:
         def test_mod_count(mock_database):
@@ -89,38 +86,62 @@ def mock_database() -> dict:
     """
     return {
         "version_id": "GTSv101",
-        "version_name": "GateToSovngarde v1.01",
+        "version_name": "GateToSovngarde v1.01 - Archived Mods",
         "created_date": "2026-03-14",
         "mods": [
             {
-                "id": "mod_quest_001",
+                "id": "mod_1",
                 "name": "Quest Pack Alpha",
-                "description": "First set of custom quests",
-                "author": "Quest Maker",
-                "version": "1.0.0",
-                "required_files": ["quest_001.esp", "quest_001_dialogue.esm"],
+                "description": "Archived mod: Quest Pack Alpha",
+                "author": "Unknown",
+                "version": "1.0",
+                "required_files": [
+                    "Quest Pack Alpha.7z",
+                    "Quest Pack Alpha.rar",
+                    "Quest Pack Alpha.zip",
+                    "Quest Pack Alpha.tar.xz",
+                    "Quest Pack Alpha.tar.gz",
+                    "Quest Pack Alpha.tar",
+                    "Quest Pack Alpha.iso",
+                ],
                 "conflicts_with": [],
-                "tags": ["quest", "story"],
+                "tags": ["archived"],
             },
             {
-                "id": "mod_armor_001",
+                "id": "mod_2",
                 "name": "Armor Collection",
-                "description": "Enhanced armor set",
-                "author": "Armor Designer",
-                "version": "2.1.0",
-                "required_files": ["armor_set.esp"],
-                "conflicts_with": ["mod_armor_002"],
-                "tags": ["armor", "equipment"],
+                "description": "Archived mod: Armor Collection",
+                "author": "Unknown",
+                "version": "1.0",
+                "required_files": [
+                    "Armor Collection.7z",
+                    "Armor Collection.rar",
+                    "Armor Collection.zip",
+                    "Armor Collection.tar.xz",
+                    "Armor Collection.tar.gz",
+                    "Armor Collection.tar",
+                    "Armor Collection.iso",
+                ],
+                "conflicts_with": [],
+                "tags": ["archived"],
             },
             {
-                "id": "mod_weapons_001",
+                "id": "mod_3",
                 "name": "Weapon Enhancement",
-                "description": "New weapons and balance tweaks",
-                "author": "Weapon Master",
-                "version": "1.5.0",
-                "required_files": ["weapons.esp", "weapons_textures.bsa"],
+                "description": "Archived mod: Weapon Enhancement",
+                "author": "Unknown",
+                "version": "1.0",
+                "required_files": [
+                    "Weapon Enhancement.7z",
+                    "Weapon Enhancement.rar",
+                    "Weapon Enhancement.zip",
+                    "Weapon Enhancement.tar.xz",
+                    "Weapon Enhancement.tar.gz",
+                    "Weapon Enhancement.tar",
+                    "Weapon Enhancement.iso",
+                ],
                 "conflicts_with": [],
-                "tags": ["weapons", "combat"],
+                "tags": ["archived"],
             },
         ],
     }
@@ -142,3 +163,61 @@ def database_loader() -> DatabaseLoader:
             assert db["version_id"] == "GTSv101"
     """
     return DatabaseLoader()
+
+
+@pytest.fixture
+def mock_database_loader(mock_database) -> DatabaseLoader:
+    """Provide a DatabaseLoader with a pre-populated mock database.
+
+    Returns a DatabaseLoader configured to return the mock database
+    for test version lookups, useful for testing import workflows
+    without loading real large databases.
+
+    Args:
+        mock_database: The mock database fixture
+
+    Returns:
+        DatabaseLoader instance with mock data
+
+    Example:
+        def test_import_with_mock_db(mock_database_loader):
+            db = mock_database_loader.get_version("GTSv101")
+            assert len(db["mods"]) == 3
+    """
+    loader = DatabaseLoader()
+    # Pre-populate the cache with mock data
+    loader._cache["GTSv101"] = mock_database
+    return loader
+
+
+@pytest.fixture
+def use_mock_database_for_tests(monkeypatch, mock_database) -> None:
+    """Use mock database for a specific test.
+
+    This fixture monkeypatches the DatabaseLoader to return mock data
+    for the test, preventing tests from loading the large real database.
+    This speeds up tests and makes them more isolated.
+
+    This is NOT autouse - individual tests must opt-in by requesting this fixture.
+
+    Args:
+        monkeypatch: Pytest monkeypatch fixture
+        mock_database: The mock database fixture
+
+    Example:
+        def test_import_with_mock_db(use_mock_database_for_tests):
+            # Test code that uses mocked GTSv101 database
+            pass
+    """
+    from cli.db import DatabaseLoader
+
+    original_get_version = DatabaseLoader.get_version
+
+    def mock_get_version(self, version_id: str) -> dict:
+        """Return mock database for testing."""
+        if version_id == "GTSv101":
+            return mock_database
+        # Fall back to original for other versions
+        return original_get_version(self, version_id)
+
+    monkeypatch.setattr(DatabaseLoader, "get_version", mock_get_version)

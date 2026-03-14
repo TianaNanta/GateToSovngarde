@@ -135,18 +135,16 @@ class TestImportCommandExitCodes:
     """Tests for import command exit codes."""
 
     def test_import_success_exit_code_zero(
-        self, cli_runner: CliRunner, temp_directories
+        self, cli_runner: CliRunner, temp_directories, use_mock_database_for_tests
     ) -> None:
         """Test that successful import returns exit code 0."""
         source_dir, dest_dir = temp_directories
         source = Path(source_dir)
 
-        # Create all required files
-        (source / "quest_001.esp").write_text("content")
-        (source / "quest_001_dialogue.esm").write_text("content")
-        (source / "armor_set.esp").write_text("content")
-        (source / "weapons.esp").write_text("content")
-        (source / "weapons_textures.bsa").write_text("content")
+        # Create all required archive files
+        (source / "Quest Pack Alpha.7z").write_text("content")
+        (source / "Armor Collection.7z").write_text("content")
+        (source / "Weapon Enhancement.7z").write_text("content")
 
         result = cli_runner.invoke(app, ["import", "GTSv101", source_dir, dest_dir])
 
@@ -189,19 +187,17 @@ class TestImportCommandOutput:
     """Tests for import command output format."""
 
     def test_import_success_has_readable_output(
-        self, cli_runner: CliRunner, temp_directories
+        self, cli_runner: CliRunner, temp_directories, use_mock_database_for_tests
     ) -> None:
         """Test that successful import provides readable output."""
         source_dir, dest_dir = temp_directories
         source = Path(source_dir)
 
-        # Create all required files
+        # Create all required archive files
         files = [
-            "quest_001.esp",
-            "quest_001_dialogue.esm",
-            "armor_set.esp",
-            "weapons.esp",
-            "weapons_textures.bsa",
+            "Quest Pack Alpha.7z",
+            "Armor Collection.7z",
+            "Weapon Enhancement.7z",
         ]
         for file in files:
             (source / file).write_text("content")
@@ -227,18 +223,16 @@ class TestImportCommandOutput:
         assert len(result.stdout) > 0
 
     def test_import_output_mentions_version(
-        self, cli_runner: CliRunner, temp_directories
+        self, cli_runner: CliRunner, temp_directories, use_mock_database_for_tests
     ) -> None:
         """Test that import output mentions the version being imported."""
         source_dir, dest_dir = temp_directories
         source = Path(source_dir)
 
-        # Create files
-        (source / "quest_001.esp").write_text("content")
-        (source / "quest_001_dialogue.esm").write_text("content")
-        (source / "armor_set.esp").write_text("content")
-        (source / "weapons.esp").write_text("content")
-        (source / "weapons_textures.bsa").write_text("content")
+        # Create archive files
+        (source / "Quest Pack Alpha.7z").write_text("content")
+        (source / "Armor Collection.7z").write_text("content")
+        (source / "Weapon Enhancement.7z").write_text("content")
 
         result = cli_runner.invoke(app, ["import", "GTSv101", source_dir, dest_dir])
 

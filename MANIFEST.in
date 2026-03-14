@@ -1,0 +1,5 @@
+include README.md
+include LICENSE
+recursive-include src/cli/databases *.json
+recursive-include src/cli/databases *.yaml
+recursive-include src/cli/databases *.yml

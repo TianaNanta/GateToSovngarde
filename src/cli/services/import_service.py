@@ -28,6 +28,53 @@ class ImportService:
         """Initialize the import service."""
         self.loader = DatabaseLoader()
 
+    def _find_archive_file(self, source: Path, base_name: str) -> Path | None:
+        """Find an archive file with any supported extension.
+
+        For archived mods, tries to find the file with common archive
+        extensions (.7z, .rar, .zip, .tar.xz, .tar.gz, .tar, .iso).
+
+        Handles filenames with version/timestamp suffixes like:
+        "ModName-123456-1-0-1234567890.7z" when looking for "ModName"
+
+        Args:
+            source: Source directory to search in
+            base_name: Base name of the file (before extension)
+
+        Returns:
+            Path to the found archive file, or None if not found
+        """
+        import re
+
+        archive_extensions = [
+            ".7z",
+            ".rar",
+            ".zip",
+            ".tar.xz",
+            ".tar.gz",
+            ".tar",
+            ".iso",
+        ]
+
+        # First, try exact match (most common case)
+        for ext in archive_extensions:
+            archive_path = source / f"{base_name}{ext}"
+            if archive_path.exists():
+                return archive_path
+
+        # If no exact match, search for files that START with the base_name
+        # This handles cases where files have version/timestamp suffixes
+        # e.g., looking for "ModName" might find "ModName-12345-1-0-1234567890.7z"
+        for ext in archive_extensions:
+            pattern = re.compile(
+                rf"^{re.escape(base_name)}(?:-\d+)*(?:-\d+\.\d+)*(?:-\d+)?{re.escape(ext)}$"
+            )
+            for file in source.iterdir():
+                if file.is_file() and pattern.match(file.name):
+                    return file
+
+        return None
+
     def execute(
         self,
         version: str,
@@ -38,7 +85,8 @@ class ImportService:
         """Execute the import operation.
 
         Loads the GTS version database and copies mod files from source
-        to destination directory.
+        to destination directory. For archived mods, searches for any
+        supported archive format.
 
         Args:
             version: GTS version identifier (e.g., "GTSv101")
@@ -68,6 +116,7 @@ class ImportService:
             # Process each mod
             for mod in mods:
                 mod_id = mod.get("id", "unknown")
+                mod_name = mod.get("name", "unknown")
                 required_files = mod.get("required_files", [])
 
                 # Skip mods with no files
@@ -75,67 +124,76 @@ class ImportService:
                     mods_imported += 1
                     continue
 
-                # Try to copy each required file
-                mod_success = True
-                for file_name in required_files:
-                    source_file = source / file_name
-                    dest_file = dest / file_name
+                # Try to find and copy the mod file
+                mod_success = False
+                actual_file_found = None
 
-                    try:
-                        # Check if source file exists
-                        if not source_file.exists():
+                # For archived mods, try to find any matching archive format
+                if required_files and len(required_files) > 0:
+                    # Get the base name (without extension) from the first required file
+                    first_file = required_files[0]
+                    base_name = (
+                        first_file.rsplit(".", 1)[0]
+                        if "." in first_file
+                        else first_file
+                    )
+
+                    # Search for the archive file
+                    actual_file_found = self._find_archive_file(source, base_name)
+
+                    if actual_file_found:
+                        source_file = actual_file_found
+                        dest_file = dest / actual_file_found.name
+
+                        try:
+                            # Check if destination exists and force is not set
+                            if dest_file.exists() and not force:
+                                errors.append(
+                                    ImportError(
+                                        mod_id=mod_id,
+                                        error_type="file_exists",
+                                        message=f"File already exists: {actual_file_found.name}",
+                                        recovery_suggestion="Use --force to overwrite existing files",
+                                    )
+                                )
+                            else:
+                                # Copy the file
+                                dest_file.parent.mkdir(parents=True, exist_ok=True)
+                                shutil.copy2(source_file, dest_file)
+                                files_copied += 1
+                                mod_success = True
+
+                        except PermissionError:
                             errors.append(
                                 ImportError(
                                     mod_id=mod_id,
-                                    error_type="file_not_found",
-                                    message=f"Required file not found: {file_name}",
-                                    recovery_suggestion=f"Ensure {file_name} exists in {source}",
+                                    error_type="permission_denied",
+                                    message=f"Permission denied copying {actual_file_found.name}",
+                                    recovery_suggestion=f"Check write permissions for {dest}",
                                 )
                             )
-                            mod_success = False
-                            continue
-
-                        # Check if destination exists and force is not set
-                        if dest_file.exists() and not force:
+                        except Exception as e:
                             errors.append(
                                 ImportError(
                                     mod_id=mod_id,
-                                    error_type="file_exists",
-                                    message=f"File already exists: {file_name}",
-                                    recovery_suggestion="Use --force to overwrite existing files",
+                                    error_type="io_error",
+                                    message=f"Error copying {actual_file_found.name}: {str(e)}",
+                                    recovery_suggestion="Check disk space and file permissions",
                                 )
                             )
-                            mod_success = False
-                            continue
-
-                        # Copy the file
-                        dest_file.parent.mkdir(parents=True, exist_ok=True)
-                        shutil.copy2(source_file, dest_file)
-                        files_copied += 1
-
-                    except PermissionError:
+                    else:
+                        # No archive file found with any extension
                         errors.append(
                             ImportError(
                                 mod_id=mod_id,
-                                error_type="permission_denied",
-                                message=f"Permission denied copying {file_name}",
-                                recovery_suggestion=f"Check write permissions for {dest}",
+                                error_type="file_not_found",
+                                message=f"Required archive file not found: {base_name}.<7z|rar|zip|tar.xz|tar.gz|tar|iso>",
+                                recovery_suggestion=f"Ensure {mod_name} archive exists in {source}",
                             )
                         )
-                        mod_success = False
-                    except Exception as e:
-                        errors.append(
-                            ImportError(
-                                mod_id=mod_id,
-                                error_type="io_error",
-                                message=f"Error copying {file_name}: {str(e)}",
-                                recovery_suggestion="Check disk space and file permissions",
-                            )
-                        )
-                        mod_success = False
 
-                # Count as imported if at least one file succeeded
-                if mod_success or (required_files and files_copied > 0):
+                # Count as imported if file was successfully copied
+                if mod_success:
                     mods_imported += 1
 
             duration = time.time() - start_time

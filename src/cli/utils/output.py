@@ -2,7 +2,6 @@
 
 from rich.console import Console
 from rich.panel import Panel
-from rich.status import Status
 
 # Initialize global console for Rich output
 console = Console()

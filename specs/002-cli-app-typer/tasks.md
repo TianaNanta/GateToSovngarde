@@ -330,50 +330,50 @@ All tasks follow this format:
 
 ### 5.1 Package Configuration
 
-- [ ] T038 [US4] Update `pyproject.toml` with package metadata:
-  - Set `name = "gatetosovngarde-cli"`
-  - Set `version = "0.1.0"`
-  - Set `description = "Mod management tools for GateToSovngarde"`
-  - Set `authors = [...]` with your information
-  - Add `keywords = ["cli", "mods", "gatetosvngarde"]`
-  - Add `classifiers` for Python 3.13, CLI
+- [x] T038 [US4] Update `pyproject.toml` with package metadata:
+   - Set `name = "gatetosovngarde-cli"`
+   - Set `version = "0.1.0"`
+   - Set `description = "Mod management tools for GateToSovngarde"`
+   - Set `authors = [...]` with your information
+   - Add `keywords = ["cli", "mods", "gatetosvngarde"]`
+   - Add `classifiers` for Python 3.13, CLI
 
-- [ ] T039 [US4] Configure package data in `pyproject.toml`:
-  - Set `include-package-data = true` in `[tool.uv]` or `[project]`
-  - Create MANIFEST.in to explicitly include database files:
-    ```
-    include databases/**/*.json
-    include databases/**/*.yaml
-    ```
-  - Verify databases/ directory will be bundled with package
+- [x] T039 [US4] Configure package data in `pyproject.toml`:
+   - Set `include-package-data = true` in `[tool.uv]` or `[project]`
+   - Create MANIFEST.in to explicitly include database files:
+     ```
+     include databases/**/*.json
+     include databases/**/*.yaml
+     ```
+   - Verify databases/ directory will be bundled with package
 
-- [ ] T040 [P] [US4] Create `.gitignore` updates to exclude build artifacts:
-  - Add `build/`
-  - Add `dist/`
-  - Add `*.egg-info/`
-  - Add `.eggs/`
+- [x] T040 [P] [US4] Create `.gitignore` updates to exclude build artifacts:
+   - Add `build/`
+   - Add `dist/`
+   - Add `*.egg-info/`
+   - Add `.eggs/`
 
 ### 5.2 Build & Distribution
 
-- [ ] T041 [US4] Test local package build:
-  - Run `uv build` to create wheel and source distributions
-  - Verify outputs in dist/ directory:
-    - gatetosovngarde-cli-0.1.0-py3-none-any.whl
-    - gatetosovngarde-cli-0.1.0.tar.gz
-  - Verify databases/ included in wheel (inspect with `unzip -l`)
+- [x] T041 [US4] Test local package build:
+   - Run `uv build` to create wheel and source distributions
+   - Verify outputs in dist/ directory:
+     - gatetosovngarde-cli-0.1.0-py3-none-any.whl
+     - gatetosovngarde-cli-0.1.0.tar.gz
+   - Verify databases/ included in wheel (inspect with `unzip -l`)
 
-- [ ] T042 [P] [US4] Test local package installation:
-  - Create test virtual environment: `python -m venv test_env`
-  - Install built wheel: `pip install dist/gatetosovngarde-cli-*.whl`
-  - Verify `gts --help` works in test environment
-  - Verify `gts import --help` works
-  - Verify databases are accessible
+- [x] T042 [P] [US4] Test local package installation:
+   - Create test virtual environment: `python -m venv test_env`
+   - Install built wheel: `pip install dist/gatetosovngarde-cli-*.whl`
+   - Verify `gts --help` works in test environment
+   - Verify `gts import --help` works
+   - Verify databases are accessible
 
 - [ ] T043 [P] [US4] Test uv tool installation from local wheel:
-  - Run `uv tool install ./dist/gatetosovngarde-cli-*.whl`
-  - Verify `gts --help` works
-  - Verify `gts import --help` works
-  - Test actual import with test data
+   - Run `uv tool install ./dist/gatetosovngarde-cli-*.whl`
+   - Verify `gts --help` works
+   - Verify `gts import --help` works
+   - Test actual import with test data
 
 ### 5.3 Distribution Setup (Future - PyPI & GitHub)
 

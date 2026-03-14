@@ -17,9 +17,7 @@ Example usage:
 """
 
 import json
-from importlib import resources
 from pathlib import Path
-from typing import Optional
 
 from ..utils.errors import DatabaseError
 

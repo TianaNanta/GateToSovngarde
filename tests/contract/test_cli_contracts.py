@@ -11,7 +11,6 @@ Tests in this module verify:
 - Command structure and argument parsing
 """
 
-import pytest
 from typer.testing import CliRunner
 
 from cli.main import app

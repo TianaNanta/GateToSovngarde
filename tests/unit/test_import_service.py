@@ -3,7 +3,6 @@
 Tests the core import operation logic including file copying and error handling.
 """
 
-import pytest
 from pathlib import Path
 import tempfile
 
@@ -38,7 +37,7 @@ class TestImportServiceExecution:
             assert result.files_copied >= 0
             assert result.mods_imported >= 0
 
-    def test_execute_tracks_statistics(self) -> None:
+    def test_execute_tracks_statistics(self, use_mock_database_for_tests) -> None:
         """Test that ImportService tracks import statistics correctly."""
         with (
             tempfile.TemporaryDirectory() as source_dir,
@@ -47,11 +46,10 @@ class TestImportServiceExecution:
             source = Path(source_dir)
             dest = Path(dest_dir)
 
-            # Create files for first mod
-            (source / "quest_001.esp").write_text("quest data")
-            (source / "quest_001_dialogue.esm").write_text("dialogue data")
-            # Create files for second mod
-            (source / "armor_set.esp").write_text("armor data")
+            # Create archive files for mods
+            (source / "Quest Pack Alpha.7z").write_text("quest data")
+            (source / "Armor Collection.7z").write_text("armor data")
+            (source / "Weapon Enhancement.7z").write_text("weapons data")
 
             service = ImportService()
             result = service.execute("GTSv101", source, dest)
@@ -71,9 +69,9 @@ class TestImportServiceExecution:
             source = Path(source_dir)
             dest = Path(dest_dir)
 
-            # Create only one file, others will be missing
-            (source / "quest_001.esp").write_text("quest data")
-            # Missing: quest_001_dialogue.esm, armor files, weapon files
+            # Create only one archive file, others will be missing
+            (source / "Quest Pack Alpha.7z").write_text("quest data")
+            # Missing: Armor Collection and Weapon Enhancement archives
 
             service = ImportService()
             result = service.execute("GTSv101", source, dest)
@@ -92,10 +90,10 @@ class TestImportServiceExecution:
             source = Path(source_dir)
             dest = Path(dest_dir)
 
-            # Create files in both source and dest
-            (source / "quest_001.esp").write_text("new content")
+            # Create archive files in both source and dest
+            (source / "Quest Pack Alpha.7z").write_text("new content")
             dest.mkdir(exist_ok=True)
-            (dest / "quest_001.esp").write_text("old content")
+            (dest / "Quest Pack Alpha.7z").write_text("old content")
 
             service = ImportService()
 
@@ -106,8 +104,8 @@ class TestImportServiceExecution:
             # With force, should succeed (overwrite)
             dest_force = Path(dest_dir + "_force")
             dest_force.mkdir(exist_ok=True)
-            (source / "quest_001.esp").write_text("new content")
-            (dest_force / "quest_001.esp").write_text("old content")
+            (source / "Quest Pack Alpha.7z").write_text("new content")
+            (dest_force / "Quest Pack Alpha.7z").write_text("old content")
 
             result_force = service.execute("GTSv101", source, dest_force, force=True)
             # With force, should not have error for existing file
@@ -125,14 +123,14 @@ class TestImportServiceExecution:
             source = Path(source_dir)
             dest = Path(temp_base) / "new_dest" / "subdir"
 
-            # Create test file
-            (source / "quest_001.esp").write_text("quest data")
+            # Create test archive file
+            (source / "Quest Pack Alpha.7z").write_text("quest data")
 
             # Destination doesn't exist yet
             assert not dest.exists()
 
             service = ImportService()
-            result = service.execute("GTSv101", source, dest)
+            service.execute("GTSv101", source, dest)
 
             # Destination should be created
             assert dest.exists()
@@ -151,8 +149,8 @@ class TestImportServiceErrorHandling:
             source = Path(source_dir)
             dest = Path(dest_dir)
 
-            # Create test file
-            (source / "quest_001.esp").write_text("quest data")
+            # Create test archive file
+            (source / "Quest Pack Alpha.7z").write_text("quest data")
 
             # Make destination read-only (if on Unix-like system)
             import os

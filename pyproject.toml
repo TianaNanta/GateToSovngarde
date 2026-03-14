@@ -5,12 +5,29 @@ build-backend = "hatchling.build"
 [project]
 name = "gatetosovngarde-cli"
 version = "0.1.0"
-description = "CLI tool for managing mods in GateToSovngarde"
+description = "CLI tool for managing mods in GateToSovngarde modlist"
 readme = "README.md"
+authors = [
+    {name = "TianaNanta", email = "andrianjakananta@gmail.com"}
+]
 requires-python = ">=3.13"
 dependencies = [
     "typer>=0.9.0",
     "rich>=13.0.0",
+]
+keywords = ["cli", "mods", "gatetosovngarde", "skyrim"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Games/Entertainment",
+    "Topic :: System :: Software Distribution",
+    "Topic :: Utilities",
 ]
 
 [project.scripts]
@@ -21,9 +38,13 @@ package = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/cli"]
+include = [
+    "/src/cli/databases",
+]
 
 [dependency-groups]
 dev = [
     "pytest>=9.0.2",
     "pytest-cov>=7.0.0",
+    "ruff>=0.15.6",
 ]

@@ -3,13 +3,10 @@
 Tests the import command parameter validation and command-line interface.
 """
 
-import pytest
-import tempfile
 from pathlib import Path
 from typer.testing import CliRunner
 
 from cli.main import app
-from cli.utils.errors import ValidationError
 
 
 class TestImportCommandValidation:

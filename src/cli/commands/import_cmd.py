@@ -18,7 +18,7 @@ from ..db import DatabaseLoader
 from ..models.import_result import ImportResult
 from ..services.import_service import ImportService
 from ..utils.errors import ValidationError
-from ..utils.output import success, error, progress
+from ..utils.output import success, error
 
 
 def import_cmd(

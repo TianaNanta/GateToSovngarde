@@ -22,8 +22,6 @@ Example:
     app.command(name="import")(import_cmd)
 """
 
-from typing import Any
-
 import typer
 
 from .import_cmd import import_cmd
