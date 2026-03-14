@@ -5,7 +5,6 @@ A Python script to import mods from a list file with beautiful Rich logging.
 """
 
 import logging
-import os
 import shutil
 import sys
 from datetime import datetime
