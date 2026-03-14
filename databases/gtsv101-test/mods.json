@@ -1,0 +1,67 @@
+{
+  "version_id": "GTSv101",
+  "version_name": "GateToSovngarde v1.01 - Test Version",
+  "created_date": "2026-03-14",
+  "mods": [
+    {
+      "id": "mod_1",
+      "name": "Quest Pack Alpha",
+      "description": "Archived mod: Quest Pack Alpha",
+      "author": "Unknown",
+      "version": "1.0",
+      "required_files": [
+        "Quest Pack Alpha.7z",
+        "Quest Pack Alpha.rar",
+        "Quest Pack Alpha.zip",
+        "Quest Pack Alpha.tar.xz",
+        "Quest Pack Alpha.tar.gz",
+        "Quest Pack Alpha.tar",
+        "Quest Pack Alpha.iso"
+      ],
+      "conflicts_with": [],
+      "tags": [
+        "archived"
+      ]
+    },
+    {
+      "id": "mod_2",
+      "name": "Armor Collection",
+      "description": "Archived mod: Armor Collection",
+      "author": "Unknown",
+      "version": "1.0",
+      "required_files": [
+        "Armor Collection.7z",
+        "Armor Collection.rar",
+        "Armor Collection.zip",
+        "Armor Collection.tar.xz",
+        "Armor Collection.tar.gz",
+        "Armor Collection.tar",
+        "Armor Collection.iso"
+      ],
+      "conflicts_with": [],
+      "tags": [
+        "archived"
+      ]
+    },
+    {
+      "id": "mod_3",
+      "name": "Weapon Enhancement",
+      "description": "Archived mod: Weapon Enhancement",
+      "author": "Unknown",
+      "version": "1.0",
+      "required_files": [
+        "Weapon Enhancement.7z",
+        "Weapon Enhancement.rar",
+        "Weapon Enhancement.zip",
+        "Weapon Enhancement.tar.xz",
+        "Weapon Enhancement.tar.gz",
+        "Weapon Enhancement.tar",
+        "Weapon Enhancement.iso"
+      ],
+      "conflicts_with": [],
+      "tags": [
+        "archived"
+      ]
+    }
+  ]
+}

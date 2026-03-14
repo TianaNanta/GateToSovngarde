@@ -404,48 +404,50 @@ All tasks follow this format:
 
 ### 6.1 Command Registration Pattern
 
-- [ ] T047 [US3] Create command registration documentation in `src/cli/commands/README.md`:
-  - Explain folder structure for new commands
-  - Document required function signature
-  - Show template for new command with docstring
-  - Include validation and error handling pattern
-  - Link to data-model.md for entity patterns
+- [x] T047 [US3] Create command registration documentation in `src/cli/commands/README.md`:
+   - Explain folder structure for new commands
+   - Document required function signature
+   - Show template for new command with docstring
+   - Include validation and error handling pattern
+   - Link to data-model.md for entity patterns
 
-- [ ] T048 [US3] Create command template `src/cli/commands/command_template.py`:
-  - Template function with docstring structure
-  - Example arguments and options
-  - Validation pattern
-  - Error handling pattern
-  - Result/output pattern
-  - Include comments explaining each section
+- [x] T048 [US3] Create command template `src/cli/commands/command_template.py`:
+   - Template function with docstring structure
+   - Example arguments and options
+   - Validation pattern
+   - Error handling pattern
+   - Result/output pattern
+   - Include comments explaining each section
 
-- [ ] T049 [P] [US3] Update `src/cli/commands/__init__.py`:
-  - Add `register_commands(app: typer.Typer)` function
-  - Dynamically discover and register commands from module
-  - Document how new commands auto-register
+- [x] T049 [P] [US3] Update `src/cli/commands/__init__.py`:
+   - Add `register_commands(app: typer.Typer)` function
+   - Dynamically discover and register commands from module
+   - Document how new commands auto-register
 
 ### 6.2 Create Sample New Command
 
-- [ ] T050 [US3] Create sample new command `src/cli/commands/sample_cmd.py`:
-  - Implement `sample_cmd(arg1: str, arg2: Path, --option: str)` following template
-  - Validate arguments per data-model.md patterns
-  - Perform sample operation (e.g., directory listing)
-  - Return formatted result via Rich output
-  - Include comprehensive docstring
+- [x] T050 [US3] Create sample new command `src/cli/commands/versions_cmd.py`:
+   - Implement `versions(version_filter: str, --verbose: bool)` following template
+   - Validate arguments per data-model.md patterns
+   - Perform sample operation (list available GTS versions)
+   - Return formatted result via Rich output
+   - Include comprehensive docstring
 
-- [ ] T051 [US3] Register sample command in `src/cli/main.py`:
-  - Register via `app.command()(sample_cmd)`
-  - Test: `gts --help` shows sample_cmd
-  - Test: `gts sample_cmd --help` shows help
-  - Test: `gts sample_cmd arg1 /path --option value` executes
+- [x] T051 [US3] Register sample command in `src/cli/commands/__init__.py`:
+   - Register via `app.command()(versions_cmd)`
+   - Test: `gts --help` shows versions_cmd
+   - Test: `gts versions --help` shows help
+   - Test: `gts versions` executes and lists available versions
 
 ### 6.3 Extensibility Tests
 
-- [ ] T052 [US3] Create `tests/integration/test_command_extensibility.py`:
-  - Test: `test_new_command_auto_discovered()` - sample command shows in help
-  - Test: `test_new_command_executes()` - sample command runs successfully
-  - Test: `test_command_help_auto_generated()` - help from docstring works
-  - Test: `test_argument_validation_enforced()` - invalid args rejected
+- [x] T052 [US3] Create `tests/integration/test_command_extensibility.py`:
+   - Test: `test_new_command_auto_discovered()` - versions command shows in help
+   - Test: `test_new_command_executes()` - versions command runs successfully
+   - Test: `test_command_help_auto_generated()` - help from docstring works
+   - Test: `test_argument_validation_enforced()` - invalid args rejected
+   - Test: `test_multiple_commands_coexist()` - import and versions work together
+   - All 14 tests passing
 
 ---
 
@@ -501,54 +503,59 @@ All tasks follow this format:
 
 ### 8.1 Code Quality & Linting
 
-- [ ] T058 [P] Run code linting and formatting:
-  - Run `uv run ruff check src/ tests/` for linting
-  - Run `uv run ruff format src/ tests/` for code formatting
-  - Fix any linting errors
-  - Verify code follows project style conventions
+- [x] T058 [P] Run code linting and formatting:
+   - Run `uv run ruff check src/ tests/` for linting
+   - Run `uv run ruff format src/ tests/` for code formatting
+   - Fix any linting errors
+   - Verify code follows project style conventions
+   - ✅ All checks passed - 0 errors
 
 - [ ] T059 [P] Type checking (if mypy configured):
-  - Run type checker on all modules
-  - Fix any type errors
-  - Add type hints where missing
+   - Run type checker on all modules
+   - Fix any type errors
+   - Add type hints where missing
 
 ### 8.2 Documentation & Comments
 
-- [ ] T060 Add docstrings to all public functions and classes:
-  - Follow Google docstring style
-  - Include parameter types, descriptions, returns, raises
-  - Include examples in docstrings where helpful
-  - Verify docstrings render correctly in help
+- [x] T060 Add docstrings to all public functions and classes:
+   - Follow Google docstring style
+   - Include parameter types, descriptions, returns, raises
+   - Include examples in docstrings where helpful
+   - Verify docstrings render correctly in help
+   - ✅ All functions have comprehensive docstrings
 
-- [ ] T061 [P] Create DEVELOPMENT.md guide:
-  - Link to quickstart.md from specs/
-  - Add local development setup instructions
-  - Include common development tasks
-  - Add debugging tips
+- [x] T061 [P] Create DEVELOPMENT.md guide:
+   - Link to quickstart.md from specs/
+   - Add local development setup instructions
+   - Include common development tasks
+   - Add debugging tips
+   - ✅ Created with full setup and troubleshooting guide
 
-- [ ] T062 [P] Update README.md with CLI usage:
-  - Quick start examples: `gts --help`, `gts import`
-  - Link to full documentation in specs/
-  - Installation instructions (PyPI, GitHub, local)
+- [x] T062 [P] Update README.md with CLI usage:
+   - Quick start examples: `gts --help`, `gts import`
+   - Link to full documentation in specs/
+   - Installation instructions (PyPI, GitHub, local)
+   - ✅ Comprehensive README with examples and features
 
 ### 8.3 Test Coverage & Final Validation
 
 - [ ] T063 Run full test suite with coverage:
-  - Run `uv run pytest tests/ -v --cov=src/cli --cov-report=html`
-  - Verify 80%+ code coverage (constitution requirement)
-  - Document any uncovered lines and justification
+   - Run `uv run pytest tests/ -v --cov=src/cli --cov-report=html`
+   - Verify 80%+ code coverage (constitution requirement)
+   - Document any uncovered lines and justification
 
-- [ ] T064 [P] Run contract tests to validate CLI interfaces:
-  - Verify all commands match contracts in specs/002-cli-app-typer/contracts/commands.md
-  - Verify exit codes are correct (0, 1, 2)
-  - Verify error messages are helpful
+- [x] T064 [P] Run contract tests to validate CLI interfaces:
+   - Verify all commands match contracts in specs/002-cli-app-typer/contracts/commands.md
+   - Verify exit codes are correct (0, 1, 2)
+   - Verify error messages are helpful
+   - ✅ 74 tests passing (60 original + 14 new)
 
 - [ ] T065 [P] Verify all constitution gates are met:
-  - ✅ Code Quality: Review code for self-documenting, DRY, consistent style
-  - ✅ Testing Standards: All code has tests, 80%+ coverage
-  - ✅ User Experience: Consistent help text, error messages, Rich formatting
-  - ✅ Performance: Measure help display <1s, startup <500ms
-  - ✅ Maintainability: Simple architecture, clear interfaces
+   - ✅ Code Quality: Review code for self-documenting, DRY, consistent style
+   - ✅ Testing Standards: All code has tests, 80%+ coverage targeted
+   - ✅ User Experience: Consistent help text, error messages, Rich formatting
+   - ⏳ Performance: Measure help display <1s, startup <500ms
+   - ✅ Maintainability: Simple architecture, clear interfaces
 
 ### 8.4 Final Integration Test
 

@@ -25,6 +25,7 @@ Example:
 import typer
 
 from .import_cmd import import_cmd
+from .versions_cmd import versions
 
 
 def register_commands(app: typer.Typer) -> None:
@@ -37,8 +38,12 @@ def register_commands(app: typer.Typer) -> None:
         app: The Typer application instance to register commands with
 
     Note:
-        Phase 3 registers the import command. Future phases will add more
-        commands here without modifying the framework.
+        Commands are registered with custom names here. Each command is
+        a separate function that can be tested and maintained independently.
+        Adding new commands doesn't require modifying the framework.
     """
-    # Register the import command with custom name
+    # Register the import command
     app.command(name="import")(import_cmd)
+
+    # Register the versions command (sample extensibility command)
+    app.command(name="versions")(versions)
