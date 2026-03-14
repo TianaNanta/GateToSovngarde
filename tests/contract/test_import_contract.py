@@ -16,34 +16,35 @@ from cli.main import app
 
 
 class TestImportCommandRegistration:
-    """Tests that import command is properly registered and accessible."""
+    """Tests that import command is properly registered and accessible via database group."""
 
     def test_import_command_exists(self, cli_runner: CliRunner) -> None:
-        """Test that import command is registered."""
-        result = cli_runner.invoke(app, ["import", "--help"])
+        """Test that import command is registered under database group."""
+        result = cli_runner.invoke(app, ["database", "import", "--help"])
         assert result.exit_code == 0
         assert "import" in result.stdout.lower()
 
     def test_import_in_help_output(self, cli_runner: CliRunner) -> None:
-        """Test that import command appears in main help."""
+        """Test that database group appears in main help."""
         result = cli_runner.invoke(app, ["--help"])
         assert result.exit_code == 0
-        assert "import" in result.stdout.lower()
+        # Import is now under database group, so check for that
+        assert "database" in result.stdout.lower()
 
 
 class TestImportCommandHelp:
     """Tests for import command help and documentation."""
 
     def test_import_help_displays(self, cli_runner: CliRunner) -> None:
-        """Test that import help displays correctly."""
-        result = cli_runner.invoke(app, ["import", "--help"])
+        """Test that import help displays correctly under database group."""
+        result = cli_runner.invoke(app, ["database", "import", "--help"])
 
         assert result.exit_code == 0
         assert "import" in result.stdout.lower()
 
     def test_import_help_shows_parameters(self, cli_runner: CliRunner) -> None:
         """Test that import help shows all parameters."""
-        result = cli_runner.invoke(app, ["import", "--help"])
+        result = cli_runner.invoke(app, ["database", "import", "--help"])
 
         assert result.exit_code == 0
         # Should show parameters (version, source, dest)
@@ -53,7 +54,7 @@ class TestImportCommandHelp:
 
     def test_import_help_shows_flags(self, cli_runner: CliRunner) -> None:
         """Test that import help shows available flags."""
-        result = cli_runner.invoke(app, ["import", "--help"])
+        result = cli_runner.invoke(app, ["database", "import", "--help"])
 
         assert result.exit_code == 0
         # Should show flags like --force, --verbose
@@ -67,7 +68,7 @@ class TestImportCommandParameters:
 
     def test_import_requires_version(self, cli_runner: CliRunner) -> None:
         """Test that version parameter is required/handled."""
-        result = cli_runner.invoke(app, ["import"])
+        result = cli_runner.invoke(app, ["database", "import"])
 
         # Should either prompt or error
         assert result.exit_code in (0, 1, 2)
@@ -77,7 +78,7 @@ class TestImportCommandParameters:
         with tempfile.TemporaryDirectory() as source_dir:
             dest_dir = str(Path(source_dir) / "dest")
 
-            result = cli_runner.invoke(app, ["import", "GTSv101", source_dir, dest_dir])
+            result = cli_runner.invoke(app, ["database", "import", "GTSv101", source_dir, dest_dir])
 
             # Should not error on argument parsing
             assert result.exit_code != 2 or "not found" in result.stdout.lower()
@@ -88,7 +89,7 @@ class TestImportCommandParameters:
             dest_dir = str(Path(source_dir) / "dest")
 
             result = cli_runner.invoke(
-                app, ["import", "--force", "GTSv101", source_dir, dest_dir]
+                app, ["database", "import", "--force", "GTSv101", source_dir, dest_dir]
             )
 
             # Should not error on flag parsing
@@ -100,7 +101,7 @@ class TestImportCommandParameters:
             dest_dir = str(Path(source_dir) / "dest")
 
             result = cli_runner.invoke(
-                app, ["import", "--verbose", "GTSv101", source_dir, dest_dir]
+                app, ["database", "import", "--verbose", "GTSv101", source_dir, dest_dir]
             )
 
             # Should not error on flag parsing
@@ -112,7 +113,7 @@ class TestImportCommandParameters:
             dest_dir = str(Path(source_dir) / "dest")
 
             result = cli_runner.invoke(
-                app, ["import", "-f", "GTSv101", source_dir, dest_dir]
+                app, ["database", "import", "-f", "GTSv101", source_dir, dest_dir]
             )
 
             # Should not error on short flag parsing
@@ -124,7 +125,7 @@ class TestImportCommandParameters:
             dest_dir = str(Path(source_dir) / "dest")
 
             result = cli_runner.invoke(
-                app, ["import", "-v", "GTSv101", source_dir, dest_dir]
+                app, ["database", "import", "-v", "GTSv101", source_dir, dest_dir]
             )
 
             # Should not error on short flag parsing
@@ -146,7 +147,7 @@ class TestImportCommandExitCodes:
         (source / "Armor Collection.7z").write_text("content")
         (source / "Weapon Enhancement.7z").write_text("content")
 
-        result = cli_runner.invoke(app, ["import", "GTSv101", source_dir, dest_dir])
+        result = cli_runner.invoke(app, ["database", "import", "GTSv101", source_dir, dest_dir])
 
         assert result.exit_code == 0
 
@@ -158,7 +159,7 @@ class TestImportCommandExitCodes:
 
         # Invalid version
         result = cli_runner.invoke(
-            app, ["import", "InvalidVersion", "/nonexistent", dest_dir]
+            app, ["database", "import", "InvalidVersion", "/nonexistent", dest_dir]
         )
 
         assert result.exit_code == 1
@@ -176,7 +177,7 @@ class TestImportCommandExitCodes:
 
         # Use source as a non-writable location for dest (will cause error)
         result = cli_runner.invoke(
-            app, ["import", "GTSv101", source_dir, "/root/readonly_dest"]
+            app, ["database", "import", "GTSv101", source_dir, "/root/readonly_dest"]
         )
 
         # Should error (either validation or runtime)
@@ -202,7 +203,7 @@ class TestImportCommandOutput:
         for file in files:
             (source / file).write_text("content")
 
-        result = cli_runner.invoke(app, ["import", "GTSv101", source_dir, dest_dir])
+        result = cli_runner.invoke(app, ["database", "import", "GTSv101", source_dir, dest_dir])
 
         assert result.exit_code == 0
         # Output should be readable (not empty)
@@ -215,7 +216,7 @@ class TestImportCommandOutput:
         _, dest_dir = temp_directories
 
         result = cli_runner.invoke(
-            app, ["import", "InvalidVersion", "/nonexistent", dest_dir]
+            app, ["database", "import", "InvalidVersion", "/nonexistent", dest_dir]
         )
 
         assert result.exit_code == 1
@@ -234,7 +235,7 @@ class TestImportCommandOutput:
         (source / "Armor Collection.7z").write_text("content")
         (source / "Weapon Enhancement.7z").write_text("content")
 
-        result = cli_runner.invoke(app, ["import", "GTSv101", source_dir, dest_dir])
+        result = cli_runner.invoke(app, ["database", "import", "GTSv101", source_dir, dest_dir])
 
         assert result.exit_code == 0
         # Should mention version or GTSv101
@@ -261,7 +262,7 @@ class TestImportCommandInteraction:
         # Try with only version, provide other args via stdin
         result = cli_runner.invoke(
             app,
-            ["import", "GTSv101"],
+            ["database", "import", "GTSv101"],
             input=f"{source_dir}\n{dest_dir}\n",
         )
 
@@ -275,7 +276,7 @@ class TestImportCommandInteraction:
         source_dir, dest_dir = temp_directories
 
         # Run import (if user interrupts, should handle gracefully)
-        result = cli_runner.invoke(app, ["import", "GTSv101", source_dir, dest_dir])
+        result = cli_runner.invoke(app, ["database", "import", "GTSv101", source_dir, dest_dir])
 
         # Should not crash, exit code should be reasonable
         assert result.exit_code >= 0

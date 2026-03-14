@@ -18,7 +18,6 @@ from typing import Optional
 import typer
 from rich.console import Console
 
-from ..db import DatabaseLoader
 from ..utils.errors import ValidationError, OperationError
 from ..utils.output import success, error
 
@@ -102,13 +101,13 @@ def your_new_cmd(
 
     except ValidationError as e:
         # Validation errors = user error (exit code 1)
-        error(f"✗ Validation failed")
+        error("✗ Validation failed")
         console.print(f"  {e}")
         raise typer.Exit(code=1)
 
     except OperationError as e:
         # Operation errors = system error (exit code 2)
-        error(f"✗ Operation failed")
+        error("✗ Operation failed")
         console.print(f"  {e}")
         raise typer.Exit(code=2)
 
@@ -119,7 +118,7 @@ def your_new_cmd(
 
     except Exception as e:
         # Unexpected errors
-        error(f"✗ Unexpected error")
+        error("✗ Unexpected error")
         console.print(f"  {type(e).__name__}: {e}")
         if verbose:
             console.print_exception()

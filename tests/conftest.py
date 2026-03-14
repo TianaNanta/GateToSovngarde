@@ -10,7 +10,7 @@ All fixtures are automatically discovered by pytest through conftest.py.
 Example usage in tests:
     def test_import_command(cli_runner, temp_directories):
         source_dir, dest_dir = temp_directories
-        result = cli_runner.invoke(app, ["import", "GTSv101", source_dir, dest_dir])
+        result = cli_runner.invoke(app, ["database", "import", "GTSv101", source_dir, dest_dir])
         assert result.exit_code == 0
 """
 
@@ -34,7 +34,7 @@ def cli_runner() -> CliRunner:
         CliRunner instance configured for testing
 
     Example:
-        result = cli_runner.invoke(app, ["import", "GTSv101", "/src", "/dest"])
+        result = cli_runner.invoke(app, ["database", "import", "GTSv101", "/src", "/dest"])
         assert result.exit_code == 0
     """
     return CliRunner()

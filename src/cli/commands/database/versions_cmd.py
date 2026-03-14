@@ -1,4 +1,4 @@
-"""Sample command demonstrating CLI extensibility.
+"""Sample command demonstrating CLI extensibility in the database group.
 
 This is a simple example command that lists available GTS versions
 and can optionally show details about mods in a version.
@@ -9,10 +9,10 @@ It serves as:
 3. A test case for the extensibility framework
 
 To use this command:
-    gts versions --help
-    gts versions
-    gts versions --verbose
-    gts versions GTSv101 --verbose
+    gts database versions --help
+    gts database versions
+    gts database versions --verbose
+    gts database versions GTSv101 --verbose
 """
 
 from typing import Optional
@@ -21,9 +21,9 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from ..db import DatabaseLoader
-from ..utils.errors import ValidationError, OperationError
-from ..utils.output import success
+from ...db import DatabaseLoader
+from ...utils.errors import ValidationError, OperationError
+from ...utils.output import success
 
 # Initialize console for Rich output
 console = Console()

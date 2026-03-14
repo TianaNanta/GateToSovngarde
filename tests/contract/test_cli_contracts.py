@@ -78,9 +78,10 @@ class TestCommandRegistration:
     def test_import_command_registered(self, cli_runner: CliRunner) -> None:
         """Verify import command shows in help.
 
-        Phase 3 has registered the import command, so it should appear
-        in the main help output.
+        Phase 7 has reorganized commands into groups, so the import command
+        should appear under the database group in help output.
         """
         result = cli_runner.invoke(app, ["--help"])
         assert result.exit_code == 0
-        assert "import" in result.stdout.lower()
+        # Import is now under the database group
+        assert "database" in result.stdout.lower()

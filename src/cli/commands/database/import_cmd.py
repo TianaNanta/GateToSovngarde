@@ -3,10 +3,10 @@
 This command allows users to import mod databases and manage mod installations.
 
 Example usage:
-    $ gts import GTSv101 /source /destination
-    $ gts import GTSv101 /source /destination --force
-    $ gts import GTSv101 /source /destination --verbose
-    $ gts import  # Interactive mode - asks for parameters
+    $ gts database import GTSv101 /source /destination
+    $ gts database import GTSv101 /source /destination --force
+    $ gts database import GTSv101 /source /destination --verbose
+    $ gts database import  # Interactive mode - asks for parameters
 """
 
 from pathlib import Path
@@ -14,11 +14,11 @@ from typing import Optional
 
 import typer
 
-from ..db import DatabaseLoader
-from ..models.import_result import ImportResult
-from ..services.import_service import ImportService
-from ..utils.errors import ValidationError
-from ..utils.output import success, error
+from ...db import DatabaseLoader
+from ...models.import_result import ImportResult
+from ...services.import_service import ImportService
+from ...utils.errors import ValidationError
+from ...utils.output import success, error
 
 
 def import_cmd(

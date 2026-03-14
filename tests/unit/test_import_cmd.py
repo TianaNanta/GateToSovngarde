@@ -21,7 +21,9 @@ class TestImportCommandValidation:
         # Create a test file in source
         (Path(source_dir) / "test.esp").write_text("test content")
 
-        result = cli_runner.invoke(app, ["import", "GTSv101", source_dir, dest_dir])
+        result = cli_runner.invoke(
+            app, ["database", "import", "GTSv101", source_dir, dest_dir]
+        )
 
         # Should not error (files may not be found, but command should execute)
         assert result.exit_code in (0, 2)
@@ -33,7 +35,7 @@ class TestImportCommandValidation:
         source_dir, dest_dir = temp_directories
 
         result = cli_runner.invoke(
-            app, ["import", "InvalidVersion", source_dir, dest_dir]
+            app, ["database", "import", "InvalidVersion", source_dir, dest_dir]
         )
 
         # Should fail with validation error
@@ -47,7 +49,7 @@ class TestImportCommandValidation:
         _, dest_dir = temp_directories
 
         result = cli_runner.invoke(
-            app, ["import", "GTSv101", "/nonexistent/path", dest_dir]
+            app, ["database", "import", "GTSv101", "/nonexistent/path", dest_dir]
         )
 
         # Should fail with validation error
@@ -64,7 +66,7 @@ class TestImportCommandValidation:
         (Path(source_dir) / "test.esp").write_text("test content")
 
         result = cli_runner.invoke(
-            app, ["import", "GTSv101", source_dir, dest_dir, "--force"]
+            app, ["database", "import", "GTSv101", source_dir, dest_dir, "--force"]
         )
 
         # Should execute (may fail due to missing mod files, but should accept --force)
@@ -80,7 +82,7 @@ class TestImportCommandValidation:
         (Path(source_dir) / "test.esp").write_text("test content")
 
         result = cli_runner.invoke(
-            app, ["import", "GTSv101", source_dir, dest_dir, "--verbose"]
+            app, ["database", "import", "GTSv101", source_dir, dest_dir, "--verbose"]
         )
 
         # Should execute with verbose output
@@ -94,7 +96,7 @@ class TestImportCommandValidation:
         (Path(source_dir) / "test.esp").write_text("test content")
 
         result = cli_runner.invoke(
-            app, ["import", "GTSv101", source_dir, dest_dir, "-f", "-v"]
+            app, ["database", "import", "GTSv101", source_dir, dest_dir, "-f", "-v"]
         )
 
         # Should execute with short flags
@@ -106,7 +108,7 @@ class TestImportCommandHelp:
 
     def test_import_help_displays(self, cli_runner: CliRunner) -> None:
         """Test that import command help displays correctly."""
-        result = cli_runner.invoke(app, ["import", "--help"])
+        result = cli_runner.invoke(app, ["database", "import", "--help"])
 
         assert result.exit_code == 0
         assert "Import mod database" in result.stdout
