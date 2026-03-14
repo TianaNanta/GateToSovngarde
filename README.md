@@ -173,7 +173,7 @@ Contributions welcome! Please see [DEVELOPMENT.md](DEVELOPMENT.md) for guideline
 
 ## Credits
 
-- **Author**: Tiara Nanta
+- **Author**: TianaNanta
 - **Framework**: Typer + Rich + Python 3.13
 - **Package Manager**: UV
 
