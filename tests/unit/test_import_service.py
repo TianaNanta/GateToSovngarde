@@ -177,7 +177,11 @@ class TestImportServiceErrorHandling:
 
         # Success case
         result_success = ImportResult(
-            mods_imported=3, files_copied=5, duration=1.5, errors=[]
+            total_mods=3,
+            mods_imported=3,
+            files_copied=5,
+            duration=1.5,
+            errors=[],
         )
         assert result_success.success is True
 
@@ -185,12 +189,14 @@ class TestImportServiceErrorHandling:
         from cli.models.import_result import ImportError
 
         result_failure = ImportResult(
+            total_mods=5,
             mods_imported=1,
             files_copied=2,
             duration=1.5,
             errors=[
                 ImportError(
                     mod_id="mod_001",
+                    mod_name="Test Mod",
                     error_type="file_not_found",
                     message="File not found",
                     recovery_suggestion="Check file",

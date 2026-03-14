@@ -8,7 +8,7 @@ tracking progress and errors.
 import shutil
 import time
 from pathlib import Path
-from typing import List
+from typing import Callable, List, Optional
 
 from ..db import DatabaseLoader
 from ..models.import_result import ImportError, ImportResult
@@ -81,6 +81,8 @@ class ImportService:
         source: Path,
         dest: Path,
         force: bool = False,
+        operation_type: str = "copy",
+        progress_callback: Optional[Callable[[int, int, str], None]] = None,
     ) -> ImportResult:
         """Execute the import operation.
 
@@ -93,6 +95,8 @@ class ImportService:
             source: Source directory containing mod files
             dest: Destination directory for imports
             force: Whether to overwrite existing files
+            operation_type: Type of operation ("copy" or "move")
+            progress_callback: Optional callback for progress updates (current, total, mod_name)
 
         Returns:
             ImportResult with statistics and any errors
@@ -102,6 +106,8 @@ class ImportService:
         """
         start_time = time.time()
         mods_imported = 0
+        mods_missing: List[str] = []
+        mods_errors: List[str] = []
         files_copied = 0
         errors: List[ImportError] = []
 
@@ -109,15 +115,20 @@ class ImportService:
             # Load the mod database
             database = self.loader.get_version(version)
             mods = database.get("mods", [])
+            total_mods = len(mods)
 
             # Ensure destination directory exists
             dest.mkdir(parents=True, exist_ok=True)
 
             # Process each mod
-            for mod in mods:
+            for mod_index, mod in enumerate(mods):
                 mod_id = mod.get("id", "unknown")
                 mod_name = mod.get("name", "unknown")
                 required_files = mod.get("required_files", [])
+
+                # Update progress
+                if progress_callback:
+                    progress_callback(mod_index + 1, total_mods, mod_name)
 
                 # Skip mods with no files
                 if not required_files:
@@ -151,15 +162,22 @@ class ImportService:
                                 errors.append(
                                     ImportError(
                                         mod_id=mod_id,
+                                        mod_name=mod_name,
                                         error_type="file_exists",
                                         message=f"File already exists: {actual_file_found.name}",
                                         recovery_suggestion="Use --force to overwrite existing files",
                                     )
                                 )
+                                mods_errors.append(mod_name)
                             else:
-                                # Copy the file
+                                # Copy or move the file
                                 dest_file.parent.mkdir(parents=True, exist_ok=True)
-                                shutil.copy2(source_file, dest_file)
+
+                                if operation_type == "move":
+                                    shutil.move(str(source_file), str(dest_file))
+                                else:  # copy
+                                    shutil.copy2(source_file, dest_file)
+
                                 files_copied += 1
                                 mod_success = True
 
@@ -167,30 +185,36 @@ class ImportService:
                             errors.append(
                                 ImportError(
                                     mod_id=mod_id,
+                                    mod_name=mod_name,
                                     error_type="permission_denied",
                                     message=f"Permission denied copying {actual_file_found.name}",
                                     recovery_suggestion=f"Check write permissions for {dest}",
                                 )
                             )
+                            mods_errors.append(mod_name)
                         except Exception as e:
                             errors.append(
                                 ImportError(
                                     mod_id=mod_id,
+                                    mod_name=mod_name,
                                     error_type="io_error",
                                     message=f"Error copying {actual_file_found.name}: {str(e)}",
                                     recovery_suggestion="Check disk space and file permissions",
                                 )
                             )
+                            mods_errors.append(mod_name)
                     else:
                         # No archive file found with any extension
                         errors.append(
                             ImportError(
                                 mod_id=mod_id,
+                                mod_name=mod_name,
                                 error_type="file_not_found",
                                 message=f"Required archive file not found: {base_name}.<7z|rar|zip|tar.xz|tar.gz|tar|iso>",
                                 recovery_suggestion=f"Ensure {mod_name} archive exists in {source}",
                             )
                         )
+                        mods_missing.append(mod_name)
 
                 # Count as imported if file was successfully copied
                 if mod_success:
@@ -198,10 +222,14 @@ class ImportService:
 
             duration = time.time() - start_time
             return ImportResult(
+                total_mods=total_mods,
                 mods_imported=mods_imported,
+                mods_missing=mods_missing,
+                mods_errors=mods_errors,
                 files_copied=files_copied,
                 duration=duration,
                 errors=errors,
+                operation_type=operation_type,
             )
 
         except Exception as e:
