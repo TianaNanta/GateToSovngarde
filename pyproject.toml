@@ -1,9 +1,29 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
-name = "gatetosovngarde"
+name = "gatetosovngarde-cli"
 version = "0.1.0"
-description = "A comprehensive list of script/gui used for managing Gate To Sovngarde modlist"
+description = "CLI tool for managing mods in GateToSovngarde"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "typer>=0.9.0",
     "rich>=13.0.0",
+]
+
+[project.scripts]
+gts = "cli.main:app"
+
+[tool.uv]
+package = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cli"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+    "pytest-cov>=7.0.0",
 ]

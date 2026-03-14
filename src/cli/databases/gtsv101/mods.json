@@ -1,0 +1,37 @@
+{
+  "version_id": "GTSv101",
+  "version_name": "GateToSovngarde v1.01",
+  "created_date": "2026-03-14",
+  "mods": [
+    {
+      "id": "mod_quest_001",
+      "name": "Quest Pack Alpha",
+      "description": "First set of custom quests",
+      "author": "Quest Maker",
+      "version": "1.0.0",
+      "required_files": ["quest_001.esp", "quest_001_dialogue.esm"],
+      "conflicts_with": [],
+      "tags": ["quest", "story"]
+    },
+    {
+      "id": "mod_armor_001",
+      "name": "Armor Collection",
+      "description": "Enhanced armor set",
+      "author": "Armor Designer",
+      "version": "2.1.0",
+      "required_files": ["armor_set.esp"],
+      "conflicts_with": ["mod_armor_002"],
+      "tags": ["armor", "equipment"]
+    },
+    {
+      "id": "mod_weapons_001",
+      "name": "Weapon Enhancement",
+      "description": "New weapons and balance tweaks",
+      "author": "Weapon Master",
+      "version": "1.5.0",
+      "required_files": ["weapons.esp", "weapons_textures.bsa"],
+      "conflicts_with": [],
+      "tags": ["weapons", "combat"]
+    }
+  ]
+}
