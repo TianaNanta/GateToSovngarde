@@ -31,6 +31,11 @@ A comprehensive command-line interface for managing the Gate To Sovngarde modlis
 
 ## Installation
 
+### Via UV (from Git)
+```bash
+uv tool install gatetosovngarde-cli --force --from git+https://github.com/TianaNanta/GateToSovngarde.git
+```
+
 ### Via PyPI
 ```bash
 pip install gatetosovngarde-cli
@@ -199,7 +204,7 @@ uv run pytest tests/ -v
 
 ## Project Status
 
-**Current Release**: v0.3.2 (Alpha)
+**Current Release**: v0.3.5 (Alpha)
 - ✅ Phase 1-4: Core CLI framework and import functionality
 - ✅ Phase 5: Package configuration and distribution
 - ✅ Phase 6-7: Extensibility and command organization
@@ -228,6 +233,9 @@ For issues, questions, or suggestions:
 - See DEVELOPMENT.md for troubleshooting
 
 ## Changelog
+
+### v0.3.5 (Mar 2026)
+- 🚀 Removed PyPI publishing, now installs directly from Git
 
 ### v0.3.2 (Mar 2026)
 - 🐛 Fix GitHub Actions workflow errors
