@@ -1,0 +1,111 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        run: uv sync --all-extras
+
+      - name: Run tests
+        run: uv run pytest tests/ -v --tb=short
+
+      - name: Run linting
+        run: uv run ruff check src/ tests/ --config pyproject.toml
+
+      - name: Determine new version
+        id: version
+        run: |
+          CURRENT=$(uv run python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          echo "Current version: $CURRENT"
+          
+          IFS='.' read -ra VER <<< "$CURRENT"
+          MAJOR=${VER[0]}
+          MINOR=${VER[1]}
+          PATCH=${VER[2]}
+          
+          if [ "${{ github.event.inputs.version_type }}" == "major" ]; then
+            NEW="$((MAJOR + 1)).0.0"
+          elif [ "${{ github.event.inputs.version_type }}" == "minor" ]; then
+            NEW="${MAJOR}.$((MINOR + 1)).0"
+          else
+            NEW="${MAJOR}.${MINOR}.$((PATCH + 1))"
+          fi
+          
+          echo "new_version=$NEW" >> $GITHUB_OUTPUT
+
+      - name: Update pyproject.toml version
+        run: |
+          NEW_VERSION="${{ steps.version.outputs.new_version }}"
+          sed -i "s/version = \".*\"/version = \"$NEW_VERSION\"/" pyproject.toml
+          cat pyproject.toml | grep version
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          
+          if [ -z "$LAST_TAG" ]; then
+            CHANGES=$(git log --pretty=format:"- %s (%h)" -n 20)
+          else
+            CHANGES=$(git log $LAST_TAG..HEAD --pretty=format:"- %s (%h)")
+          fi
+          
+          echo "$CHANGES" > changelog.txt
+
+      - name: Commit version bump
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add pyproject.toml
+          git commit -m "Bump version to ${{ steps.version.outputs.new_version }}"
+
+      - name: Build package
+        run: uv build
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.new_version }}
+          name: Release v${{ steps.version.outputs.new_version }}
+          body_path: changelog.txt
+          files: dist/*
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push changes
+        run: |
+          git push origin main --tags

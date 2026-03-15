@@ -133,7 +133,7 @@
 - [X] T033 [P] [US2] Create integration test for full merge workflow in tests/integration/test_merge_workflows.py (end-to-end merge with confirmation)
 - [X] T034 [P] [US2] Create integration test for merge with multiple files/subdirs in tests/integration/test_merge_workflows.py
 - [X] T035 [P] [US2] Create contract test for interactive merge prompts in tests/contract/test_merge_contract.py
-- [ ] T036 [US2] Create contract test for merge confirmation handling in tests/contract/test_merge_contract.py
+- [X] T036 [US2] Create contract test for merge confirmation handling in tests/contract/test_merge_contract.py
 
 ### Implementation for User Story 2
 
@@ -348,8 +348,8 @@
 - [X] T141 [P] Verify all performance targets met
 - [X] T142 [P] Verify no stack traces shown to users (graceful error handling)
 - [X] T143 [P] Verify all user scenarios from quickstart.md work
-- [ ] T144 Create final test report with all metrics
-- [ ] T145 Create changelog/release notes for feature
+- [X] T144 Create final test report with all metrics
+- [X] T145 Create changelog/release notes for feature
 
 **Checkpoint**: Feature is polished, tested, documented, and ready for code review.
 
@@ -357,11 +357,11 @@
 
 ## Final Step: Code Review & Release
 
-- [ ] T146 Submit code review on GitHub (PR to main branch)
-- [ ] T147 Address any review feedback
-- [ ] T148 Verify all CI/CD checks pass (tests, linting)
-- [ ] T149 Merge PR to main when approved
-- [ ] T150 Tag release version (e.g., v1.0-003-merge-folders)
+- [X] T146 Submit code review on GitHub (PR to main branch)
+- [X] T147 Address any review feedback
+- [X] T148 Verify all CI/CD checks pass (tests, linting)
+- [X] T149 Merge PR to main when approved
+- [X] T150 Tag release version (e.g., v1.0-003-merge-folders)
 
 **Final Status**: ✅ Feature complete and merged to main branch
 
