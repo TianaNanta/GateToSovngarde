@@ -58,6 +58,18 @@ def merge_cmd(
     By default, the all-lowercase folder variant is selected as the merge
     target when one exists. Contents from other variants are moved into it.
 
+    Error Handling:
+    - Path validation: Checks directory exists and is readable before scanning
+    - Permission errors: Reports specific folder with permission issue
+    - Conflict detection: Warns user before proceeding with conflicts
+    - Atomic operations: Ensures no partial merges (rolls back on failure)
+    - User cancellation: Ctrl+C exits cleanly without filesystem changes
+
+    Exit codes:
+    - 0: Success (merge completed or preview shown)
+    - 1: Error (invalid path, permission denied, merge failed)
+    - 2: Invalid usage (missing required arguments)
+
     Example:
         Scan and preview duplicates:
             $ gts system merge-folders /data --preview
@@ -99,8 +111,16 @@ def merge_cmd(
 
     try:
         groups = service.scan_duplicates(path)
-    except (ValueError, PermissionError) as e:
-        error(f"Failed to scan directory: {e}")
+    except (ValueError, PermissionError, FileNotFoundError) as e:
+        # Translate service exceptions to CLI user messages
+        if isinstance(e, FileNotFoundError):
+            error(f"Path does not exist: {path}\nSuggestion: Verify the path exists")
+        elif isinstance(e, PermissionError):
+            error(
+                f"Permission denied when reading {path}\nSuggestion: Check permissions with: ls -la {path}"
+            )
+        else:
+            error(f"Failed to scan directory: {e}")
         raise typer.Exit(code=1)
 
     # Display results

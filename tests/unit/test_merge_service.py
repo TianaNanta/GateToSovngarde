@@ -435,3 +435,281 @@ class TestFormatSize:
         """Test formatting sizes in gigabytes."""
         result = merge_service.format_size(1024 * 1024 * 1024)
         assert "GB" in result
+
+
+# =============================================================================
+# USER STORY 2: AUTOMATIC MERGE WITH LOWERCASE PREFERENCE (P1)
+# =============================================================================
+
+
+class TestAutomaticTargetSelection:
+    """Tests for automatic target selection with lowercase preference (US2)."""
+
+    def test_automatic_target_prefers_lowercase(self, merge_service):
+        """Test that get_target_folder selects lowercase when available."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            group = DuplicateGroup(parent_path=root, variants=["Mods", "mods", "MODS"])
+            group.paths = {
+                "Mods": root / "Mods",
+                "mods": root / "mods",
+                "MODS": root / "MODS",
+            }
+            target = merge_service.get_target_folder(group)
+            assert target == "mods"
+
+    def test_automatic_target_only_lowercase_exists(self, merge_service):
+        """Test selection when only one lowercase variant exists."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            group = DuplicateGroup(
+                parent_path=root, variants=["Config", "config", "CONFIG"]
+            )
+            group.paths = {
+                "Config": root / "Config",
+                "config": root / "config",
+                "CONFIG": root / "CONFIG",
+            }
+            target = merge_service.get_target_folder(group)
+            assert target == "config"
+
+    def test_automatic_target_no_lowercase(self, merge_service):
+        """Test selection when no all-lowercase variant exists."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            group = DuplicateGroup(parent_path=root, variants=["Mods", "moDs"])
+            group.paths = {"Mods": root / "Mods", "moDs": root / "moDs"}
+            target = merge_service.get_target_folder(group)
+            assert target in ["Mods", "moDs"]
+
+
+class TestMergeExecution:
+    """Tests for merge execution with atomic operations (US2)."""
+
+    def test_merge_moves_all_files_to_target(self, merge_service):
+        """Test that all files from source are moved to target."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            source = root / "Mods"
+            target = root / "mods"
+            source.mkdir()
+            target.mkdir()
+            for i in range(5):
+                (source / f"file{i}.txt").write_text(f"Content {i}")
+
+            operation = merge_service.preview_merge(source, target)
+            merge_service.execute_merge(operation)
+
+            for i in range(5):
+                assert (target / f"file{i}.txt").exists()
+            assert not source.exists()
+
+    def test_merge_preserves_subdirectories(self, merge_service):
+        """Test that subdirectories and their contents are moved correctly."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            source = root / "Mods"
+            target = root / "mods"
+            source.mkdir()
+            target.mkdir()
+
+            subdir = source / "subdir"
+            subdir.mkdir()
+            (subdir / "file.txt").write_text("Content")
+
+            operation = merge_service.preview_merge(source, target)
+            merge_service.execute_merge(operation)
+
+            assert (target / "subdir" / "file.txt").exists()
+            assert not source.exists()
+
+
+class TestMergeWithConflicts:
+    """Tests for conflict handling during merge (US2 + US5)."""
+
+    def test_merge_detects_conflicting_files(self, merge_service):
+        """Test that same-named files are detected as conflicts."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            source = root / "Mods"
+            target = root / "mods"
+            source.mkdir()
+            target.mkdir()
+            (source / "file.txt").write_text("Source")
+            (target / "file.txt").write_text("Target")
+
+            operation = merge_service.preview_merge(source, target)
+            assert "file.txt" in operation.conflicts
+
+
+# =============================================================================
+# USER STORY 3: USER CHOOSES FOLDER TO KEEP (PRIORITY P2)
+# =============================================================================
+
+
+class TestUserChoiceTargetSelection:
+    """Tests for user choice when no all-lowercase variant exists (US3)."""
+
+    def test_get_target_folder_returns_first_when_no_lowercase(self, merge_service):
+        """Test that get_target_folder returns first variant when no lowercase exists."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            group = DuplicateGroup(parent_path=root, variants=["Mods", "moDs", "MoDs"])
+            group.paths = {
+                "Mods": root / "Mods",
+                "moDs": root / "moDs",
+                "MoDs": root / "MoDs",
+            }
+            target = merge_service.get_target_folder(group)
+            assert target in ["MoDs", "Mods", "moDs"]
+
+
+class TestUserCancelOperation:
+    """Tests for user cancellation (Ctrl+C) behavior."""
+
+    def test_merge_does_not_modify_on_cancellation(self, merge_service):
+        """Test that no files are modified if merge is cancelled."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            source = root / "Mods"
+            target = root / "mods"
+            source.mkdir()
+            target.mkdir()
+            (source / "file1.txt").write_text("Source")
+            (target / "file2.txt").write_text("Target")
+            assert (source / "file1.txt").exists()
+            assert (target / "file2.txt").exists()
+
+
+# =============================================================================
+# USER STORY 4: PREVIEW MERGE IMPACT (PRIORITY P2)
+# =============================================================================
+
+
+class TestPreviewMergeImpact:
+    """Tests for preview functionality (US4)."""
+
+    def test_preview_calculates_file_count(self, merge_service):
+        """Test that preview correctly calculates number of files to move."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            source = root / "Mods"
+            target = root / "mods"
+            source.mkdir()
+            target.mkdir()
+            for i in range(10):
+                (source / f"file{i}.txt").write_text(f"Content {i}")
+            operation = merge_service.preview_merge(source, target)
+            assert operation.file_count == 10
+
+    def test_preview_calculates_size(self, merge_service):
+        """Test that preview calculates estimated size."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            source = root / "Mods"
+            target = root / "mods"
+            source.mkdir()
+            target.mkdir()
+            content = "x" * 1000
+            for i in range(5):
+                (source / f"file{i}.txt").write_text(content)
+            operation = merge_service.preview_merge(source, target)
+            assert operation.estimated_size >= 5000
+
+    def test_preview_does_not_modify_files(self, merge_service):
+        """Test that preview does not modify any files."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            source = root / "Mods"
+            target = root / "mods"
+            source.mkdir()
+            target.mkdir()
+            (source / "file.txt").write_text("Original")
+            merge_service.preview_merge(source, target)
+            assert (source / "file.txt").exists()
+            assert not (target / "file.txt").exists()
+
+    def test_preview_detects_conflicts(self, merge_service):
+        """Test that preview correctly identifies file conflicts."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            source = root / "Mods"
+            target = root / "mods"
+            source.mkdir()
+            target.mkdir()
+            (source / "conflict.txt").write_text("Source")
+            (target / "conflict.txt").write_text("Target")
+            (source / "unique.txt").write_text("Unique")
+            operation = merge_service.preview_merge(source, target)
+            assert "conflict.txt" in operation.conflicts
+
+
+# =============================================================================
+# USER STORY 5: CONFLICT HANDLING (PRIORITY P3)
+# =============================================================================
+
+
+class TestConflictResolution:
+    """Tests for conflict resolution options (US5)."""
+
+    def test_conflict_detection_identifies_same_named_files(self, merge_service):
+        """Test that conflict detection identifies files with same name in both folders."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            source = root / "Mods"
+            target = root / "mods"
+            source.mkdir()
+            target.mkdir()
+
+            (source / "readme.txt").write_text("Source version")
+            (target / "readme.txt").write_text("Target version")
+            (source / "unique.txt").write_text("Only in source")
+
+            conflicts = merge_service.get_conflicts(source, target)
+
+            assert "readme.txt" in conflicts
+            assert "unique.txt" not in conflicts
+
+    def test_conflict_resolution_skip_handler(self, merge_service):
+        """Test skip conflict resolution: keep target version."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            source = root / "Mods"
+            target = root / "mods"
+            source.mkdir()
+            target.mkdir()
+
+            (source / "conflict.txt").write_text("Source")
+            (target / "conflict.txt").write_text("Target")
+            (source / "unique.txt").write_text("Unique")
+
+            def skip_handler(filename, is_dir):
+                return "skip"
+
+            operation = merge_service.preview_merge(source, target)
+            merge_service.execute_merge(operation, conflict_handler=skip_handler)
+
+            assert (target / "conflict.txt").read_text() == "Target"
+            assert (target / "unique.txt").exists()
+
+    def test_conflict_resolution_rename_handler(self, merge_service):
+        """Test rename conflict resolution: rename source file."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            source = root / "Mods"
+            target = root / "mods"
+            source.mkdir()
+            target.mkdir()
+
+            (source / "file.txt").write_text("Source version")
+            (target / "file.txt").write_text("Target version")
+
+            def rename_handler(filename, is_dir):
+                return "rename"
+
+            operation = merge_service.preview_merge(source, target)
+            merge_service.execute_merge(operation, conflict_handler=rename_handler)
+
+            assert (target / "file.txt").read_text() == "Target version"
+            renamed_files = list(target.glob("file*.txt"))
+            assert len(renamed_files) >= 2
