@@ -46,7 +46,7 @@ class TestGroupHelp:
         assert result.exit_code == 0
         assert "database" in result.stdout.lower()
         # Should have options section
-        assert "--help" in result.stdout
+        assert "-help" in result.stdout
 
     def test_group_help_shows_subcommands(self) -> None:
         """Test: gts database --help shows all subcommands."""

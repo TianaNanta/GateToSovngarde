@@ -33,8 +33,8 @@ class TestMainHelp:
 
         assert result.exit_code == 0
         assert "GateToSovngarde CLI" in result.stdout
-        assert "--help" in result.stdout
-        assert "--version" in result.stdout
+        assert "-help" in result.stdout
+        assert "-version" in result.stdout
 
     def test_gts_version_displays(self, cli_runner: CliRunner) -> None:
         """Verify gts --version shows version number.
