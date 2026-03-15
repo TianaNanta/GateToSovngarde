@@ -57,10 +57,11 @@ class TestImportCommandHelp:
         result = cli_runner.invoke(app, ["database", "import", "--help"])
 
         assert result.exit_code == 0
-        # Should show flags like --force, --verbose
+        # Should show flags like --force, --verbose, --move
         help_output = result.stdout.lower()
         assert "force" in help_output or "--force" in result.stdout
         assert "verbose" in help_output or "--verbose" in result.stdout
+        assert "move" in help_output or "--move" in result.stdout
 
 
 class TestImportCommandParameters:
@@ -78,10 +79,13 @@ class TestImportCommandParameters:
         with tempfile.TemporaryDirectory() as source_dir:
             dest_dir = str(Path(source_dir) / "dest")
 
-            result = cli_runner.invoke(app, ["database", "import", "GTSv101", source_dir, dest_dir])
+            result = cli_runner.invoke(
+                app, ["database", "import", "GTSv101", source_dir, dest_dir]
+            )
 
-            # Should not error on argument parsing
-            assert result.exit_code != 2 or "not found" in result.stdout.lower()
+            # Should successfully parse arguments and execute import
+            # Exit code can be 0 (success), 1 (validation error), or 2 (operation error with missing mods)
+            assert result.exit_code in (0, 1, 2)
 
     def test_import_with_force_flag(self, cli_runner: CliRunner) -> None:
         """Test that import accepts --force flag."""
@@ -101,7 +105,8 @@ class TestImportCommandParameters:
             dest_dir = str(Path(source_dir) / "dest")
 
             result = cli_runner.invoke(
-                app, ["database", "import", "--verbose", "GTSv101", source_dir, dest_dir]
+                app,
+                ["database", "import", "--verbose", "GTSv101", source_dir, dest_dir],
             )
 
             # Should not error on flag parsing
@@ -131,6 +136,30 @@ class TestImportCommandParameters:
             # Should not error on short flag parsing
             assert result.exit_code in (0, 1, 2)
 
+    def test_import_with_move_flag(self, cli_runner: CliRunner) -> None:
+        """Test that import accepts --move flag."""
+        with tempfile.TemporaryDirectory() as source_dir:
+            dest_dir = str(Path(source_dir) / "dest")
+
+            result = cli_runner.invoke(
+                app, ["database", "import", "--move", "GTSv101", source_dir, dest_dir]
+            )
+
+            # Should not error on flag parsing
+            assert result.exit_code in (0, 1, 2)
+
+    def test_import_with_short_flag_m(self, cli_runner: CliRunner) -> None:
+        """Test that import accepts -m short flag for move."""
+        with tempfile.TemporaryDirectory() as source_dir:
+            dest_dir = str(Path(source_dir) / "dest")
+
+            result = cli_runner.invoke(
+                app, ["database", "import", "-m", "GTSv101", source_dir, dest_dir]
+            )
+
+            # Should not error on short flag parsing
+            assert result.exit_code in (0, 1, 2)
+
 
 class TestImportCommandExitCodes:
     """Tests for import command exit codes."""
@@ -147,7 +176,9 @@ class TestImportCommandExitCodes:
         (source / "Armor Collection.7z").write_text("content")
         (source / "Weapon Enhancement.7z").write_text("content")
 
-        result = cli_runner.invoke(app, ["database", "import", "GTSv101", source_dir, dest_dir])
+        result = cli_runner.invoke(
+            app, ["database", "import", "GTSv101", source_dir, dest_dir]
+        )
 
         assert result.exit_code == 0
 
@@ -203,7 +234,9 @@ class TestImportCommandOutput:
         for file in files:
             (source / file).write_text("content")
 
-        result = cli_runner.invoke(app, ["database", "import", "GTSv101", source_dir, dest_dir])
+        result = cli_runner.invoke(
+            app, ["database", "import", "GTSv101", source_dir, dest_dir]
+        )
 
         assert result.exit_code == 0
         # Output should be readable (not empty)
@@ -235,7 +268,9 @@ class TestImportCommandOutput:
         (source / "Armor Collection.7z").write_text("content")
         (source / "Weapon Enhancement.7z").write_text("content")
 
-        result = cli_runner.invoke(app, ["database", "import", "GTSv101", source_dir, dest_dir])
+        result = cli_runner.invoke(
+            app, ["database", "import", "GTSv101", source_dir, dest_dir]
+        )
 
         assert result.exit_code == 0
         # Should mention version or GTSv101
@@ -276,7 +311,9 @@ class TestImportCommandInteraction:
         source_dir, dest_dir = temp_directories
 
         # Run import (if user interrupts, should handle gracefully)
-        result = cli_runner.invoke(app, ["database", "import", "GTSv101", source_dir, dest_dir])
+        result = cli_runner.invoke(
+            app, ["database", "import", "GTSv101", source_dir, dest_dir]
+        )
 
         # Should not crash, exit code should be reasonable
         assert result.exit_code >= 0

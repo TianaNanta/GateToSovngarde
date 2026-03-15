@@ -32,6 +32,7 @@ Example:
 import typer
 
 from .groups.database import database_app
+from .groups.system import system_app
 
 
 def register_commands(app: typer.Typer) -> None:
@@ -50,3 +51,5 @@ def register_commands(app: typer.Typer) -> None:
     """
     # Register the database group
     app.add_typer(database_app, name="database")
+    # Register the system group
+    app.add_typer(system_app, name="system")

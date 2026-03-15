@@ -6,6 +6,7 @@ Example usage:
     $ gts database import GTSv101 /source /destination
     $ gts database import GTSv101 /source /destination --force
     $ gts database import GTSv101 /source /destination --verbose
+    $ gts database import GTSv101 /source /destination --move
     $ gts database import  # Interactive mode - asks for parameters
 """
 
@@ -13,12 +14,17 @@ from pathlib import Path
 from typing import Optional
 
 import typer
+from rich.console import Console
+from rich.progress import Progress
+from rich.table import Table
 
 from ...db import DatabaseLoader
 from ...models.import_result import ImportResult
 from ...services.import_service import ImportService
 from ...utils.errors import ValidationError
 from ...utils.output import success, error
+
+console = Console()
 
 
 def import_cmd(
@@ -46,11 +52,18 @@ def import_cmd(
         "-v",
         help="Show detailed progress information",
     ),
+    move: bool = typer.Option(
+        False,
+        "--move",
+        "-m",
+        help="Move mods instead of copying (delete from source after import)",
+    ),
 ) -> None:
-    """Import mod database and copy mods to destination.
+    """Import mod database and copy/move mods to destination.
 
     This command loads a GTS version database and imports mods from the
-    source directory to the destination directory.
+    source directory to the destination directory. You can choose to either
+    copy (leaving source files intact) or move (removing source files after import).
 
     The command validates:
     - The specified GTS version exists
@@ -63,18 +76,23 @@ def import_cmd(
     Example:
         Import the GTSv101 database from /mods/source to /mods/dest:
 
-            $ gts import GTSv101 /mods/source /mods/dest
+            $ gts database import GTSv101 /mods/source /mods/dest
+
+        Move mods instead of copying (removes from source after import):
+
+            $ gts database import GTSv101 /mods/source /mods/dest --move
 
         Interactive mode with prompts:
 
-            $ gts import
+            $ gts database import
             For what version of the modlist? (ex: GTSv101): GTSv101
             Path to source directory? (ex: /home/user/mods/source): /home/user/mods/source
             Path to destination? (ex: /home/user/mods/dest): /home/user/mods/dest
+            Move mods instead of copying? [y/N]: y
 
         Force import and show verbose progress:
 
-            $ gts import GTSv101 /mods/source /mods/dest --force --verbose
+            $ gts database import GTSv101 /mods/source /mods/dest --force --verbose
 
     Args:
         version: The GTS version identifier (e.g., "GTSv101")
@@ -82,6 +100,7 @@ def import_cmd(
         dest_path: Destination directory where mods will be imported
         force: Force import even if destination already exists
         verbose: Show detailed progress information during import
+        move: Move mods instead of copying (delete from source after import)
     """
     # Interactive mode: prompt for missing parameters
     if version is None:
@@ -108,6 +127,12 @@ def import_cmd(
     else:
         dest_path = Path(dest_path)
 
+    # Ask for move/copy in interactive mode
+    if version is None or source_path is None or dest_path is None:
+        move_prompt = typer.confirm("Move mods instead of copying?", default=False)
+        if move_prompt:
+            move = True
+
     # Parameter validation
     try:
         _validate_parameters(version, source_path, dest_path)
@@ -115,13 +140,37 @@ def import_cmd(
         error(str(e))
         raise typer.Exit(code=1)
 
-    # Execute import
+    # Determine operation type
+    operation_type = "move" if move else "copy"
+
+    # Execute import with progress bar
     try:
         service = ImportService()
-        result = service.execute(version, source_path, dest_path, force)
+
+        # Use progress bar to track import progress
+        with Progress() as progress:
+            task = progress.add_task("[cyan]Importing mods...", total=None)
+
+            def progress_callback(current: int, total: int, mod_name: str) -> None:
+                """Update progress bar with current status."""
+                progress.update(
+                    task,
+                    completed=current,
+                    total=total,
+                    description=f"[cyan]Importing mods... [{current}/{total}] {mod_name}",
+                )
+
+            result = service.execute(
+                version,
+                source_path,
+                dest_path,
+                force,
+                operation_type,
+                progress_callback,
+            )
 
         # Display results
-        _display_results(result, version, verbose)
+        _display_results(result, version, verbose, operation_type)
 
         # Set exit code based on results
         if result.success:
@@ -199,42 +248,85 @@ def _validate_parameters(
         raise ValidationError(f"Cannot create/access destination: {str(e)}")
 
 
-def _display_results(result: ImportResult, version: str, verbose: bool) -> None:
+def _display_results(
+    result: ImportResult, version: str, verbose: bool, operation_type: str
+) -> None:
     """Display import results to user.
 
     Args:
         result: The ImportResult object with statistics
         version: The GTS version that was imported
         verbose: Whether to show detailed output
+        operation_type: Type of operation ("copy" or "move")
     """
+    operation_word = "moved" if operation_type == "move" else "copied"
+
     # Display summary
     if result.success:
         success(
             f"✓ Import completed successfully ({version})\n"
-            f"  Mods imported: {result.mods_imported}\n"
-            f"  Files copied: {result.files_copied}\n"
+            f"  Total mods in database: {result.total_mods}\n"
+            f"  Mods {operation_word}: {result.mods_imported}\n"
+            f"  Files {operation_word}: {result.files_copied}\n"
             f"  Duration: {result.duration:.2f}s"
         )
     elif result.partial_success:
-        typer.echo(
-            f"⚠ Import completed with errors ({version})\n"
-            f"  Mods imported: {result.mods_imported}\n"
-            f"  Files copied: {result.files_copied}\n"
-            f"  Errors: {len(result.errors)}\n"
-            f"  Duration: {result.duration:.2f}s"
+        console.print(
+            f"\n⚠ Import completed with issues ({version})\n"
+            f"  Total mods in database: {result.total_mods}\n"
+            f"  Mods {operation_word}: {result.mods_imported}\n"
+            f"  Files {operation_word}: {result.files_copied}\n"
+            f"  Mods missing: {len(result.mods_missing)}\n"
+            f"  Mods with errors: {len(result.mods_errors)}\n"
+            f"  Duration: {result.duration:.2f}s",
+            style="yellow",
         )
     else:
         error(
             f"✗ Import failed ({version})\n"
-            f"  Files copied: {result.files_copied}\n"
+            f"  Files {operation_word}: {result.files_copied}\n"
             f"  Errors: {len(result.errors)}"
         )
 
-    # Display errors if any
+    # Display missing mods summary
+    if result.mods_missing:
+        console.print("\n[bold yellow]Missing Mods:[/bold yellow]")
+        for mod_name in result.mods_missing:
+            console.print(f"  • {mod_name}")
+
+    # Display error mods summary
+    if result.mods_errors:
+        console.print("\n[bold red]Mods with Errors:[/bold red]")
+        for mod_name in result.mods_errors:
+            console.print(f"  • {mod_name}")
+
+    # Display detailed errors if verbose mode
     if result.errors:
-        typer.echo("\nErrors encountered:")
-        for err in result.errors:
-            typer.echo(f"  [{err.error_type}] {err.mod_id}: {err.message}")
-            if not verbose:
-                continue
-            typer.echo(f"    → {err.recovery_suggestion}")
+        if verbose:
+            console.print("\n[bold red]Error Details:[/bold red]")
+
+            # Create a table for errors
+            table = Table(title="Import Errors", show_header=True, header_style="bold")
+            table.add_column("Mod ID", style="cyan")
+            table.add_column("Mod Name", style="magenta")
+            table.add_column("Error Type", style="yellow")
+            table.add_column("Message", style="red")
+
+            for err in result.errors:
+                table.add_row(
+                    err.mod_id,
+                    err.mod_name,
+                    err.error_type,
+                    err.message,
+                )
+
+            console.print(table)
+
+            # Print recovery suggestions
+            console.print("\n[bold cyan]Recovery Suggestions:[/bold cyan]")
+            for err in result.errors:
+                console.print(f"  • [{err.error_type}] {err.recovery_suggestion}")
+        else:
+            console.print(
+                f"\n[yellow]{len(result.errors)} error(s) occurred. Use --verbose to see details.[/yellow]"
+            )
