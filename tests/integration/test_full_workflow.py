@@ -31,7 +31,7 @@ class TestFullWorkflow:
 
         assert result.exit_code == 0
         assert "version" in result.stdout.lower()
-        assert "0.3.1" in result.stdout
+        assert "0.3.2" in result.stdout
 
     def test_database_group_accessible(self) -> None:
         """Test: Database group is accessible and lists subcommands."""

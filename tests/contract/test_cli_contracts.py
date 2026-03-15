@@ -46,8 +46,8 @@ class TestMainHelp:
 
         assert result.exit_code == 0
         assert "GateToSovngarde CLI version" in result.stdout
-        # Should include version like 0.3.1
-        assert "0.3.1" in result.stdout or "version" in result.stdout.lower()
+        # Should include version like 0.3.2
+        assert "0.3.2" in result.stdout or "version" in result.stdout.lower()
 
     def test_invalid_command_error(self, cli_runner: CliRunner) -> None:
         """Verify unknown commands result in error exit code.
