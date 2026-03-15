@@ -1,6 +1,6 @@
 # GateToSovngarde CLI
 
-A comprehensive command-line interface for managing the Gate To Sovngarde modlist. Import mods efficiently from archived sources to your destination directory with version management and error recovery.
+A comprehensive command-line interface for managing the Gate To Sovngarde modlist. Import mods efficiently from archived sources to your destination directory with version management, error recovery, and duplicate folder merging.
 
 ## Features
 
@@ -9,11 +9,19 @@ A comprehensive command-line interface for managing the Gate To Sovngarde modlis
 - Version-specific mod databases for different GateToSovngarde versions
 - Flexible archive format detection with fallback support
 
+🔄 **Duplicate Folder Management**
+- Scan directories for case-insensitive duplicate folders (e.g., `mods`, `Mods`, `MODS`)
+- Automatic merge with lowercase preference
+- Interactive user choice when no lowercase variant exists
+- Preview merge impact before committing
+- Handle file conflicts gracefully
+
 🛡️ **Robust Operation**
 - Comprehensive error reporting with recovery suggestions
 - Permission and access validation
 - Graceful handling of missing or corrupted files
 - Force overwrite mode for existing files
+- Atomic file operations (no data loss)
 
 📊 **User-Friendly**
 - Interactive mode with helpful prompts
@@ -23,7 +31,7 @@ A comprehensive command-line interface for managing the Gate To Sovngarde modlis
 
 ## Installation
 
-### Via PyPI (Future)
+### Via PyPI
 ```bash
 pip install gatetosovngarde-cli
 ```
@@ -112,6 +120,39 @@ Errors encountered:
 gts import GTSv101 ~/Mods/source ~/Mods/imported --force
 ```
 
+## System Utilities
+
+### Merge Duplicate Case-Insensitive Folders
+```bash
+# Preview duplicates (safe, no changes)
+gts system merge-folders /path/to/scan --preview
+
+# Interactive merge (with confirmation)
+gts system merge-folders /path/to/scan
+
+# Force merge (no prompts, auto-merge using default rules)
+gts system merge-folders /path/to/scan --force
+```
+
+**Examples:**
+```bash
+# Find and preview duplicates in Mods folder
+gts system merge-folders ~/Mods --preview
+
+# Merge duplicates with user confirmation
+gts system merge-folders ~/Mods
+
+# Auto-merge all duplicates (useful for scripts)
+gts system merge-folders ~/Mods --force
+```
+
+**How it works:**
+1. Scans directory for case-insensitive duplicate folders
+2. Auto-selects lowercase variant as target (e.g., `mods` over `Mods`)
+3. Shows preview of what will be merged
+4. Prompts for confirmation (or uses --force to skip)
+5. Moves all files and deletes source folders
+
 ## Supported GTS Versions
 
 | Version | Database | Mods | Release |
@@ -157,11 +198,12 @@ uv run pytest tests/ -v
 
 ## Project Status
 
-**Current Release**: v0.1.0 (Alpha)
+**Current Release**: v0.3.0 (Alpha)
 - ✅ Phase 1-4: Core CLI framework and import functionality
 - ✅ Phase 5: Package configuration and distribution
-- 🔄 Phase 6-7: Extensibility and command organization (In Progress)
-- 📋 Phase 8: Polish and production hardening (Planned)
+- ✅ Phase 6-7: Extensibility and command organization
+- ✅ Phase 8: Polish and production hardening
+- ✅ Feature 003: Merge duplicate case-insensitive folders
 
 ## License
 
@@ -185,6 +227,17 @@ For issues, questions, or suggestions:
 - See DEVELOPMENT.md for troubleshooting
 
 ## Changelog
+
+### v0.3.0 (Mar 2026)
+- ✨ **New Feature**: Merge duplicate case-insensitive folders
+  - Scan directories for duplicate folders (mods, Mods, MODS)
+  - Automatic merge with lowercase preference
+  - Interactive user choice when no lowercase variant exists
+  - Preview merge impact before committing
+  - Handle file conflicts gracefully
+- 🔄 Added system command group for file utilities
+- 🧪 Added comprehensive test suite (202 tests)
+- ⚙️ Added GitHub Actions for CI/CD
 
 ### v0.1.0 (Mar 2026)
 - Initial release with import command
