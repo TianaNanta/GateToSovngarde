@@ -30,7 +30,7 @@ jobs:
 
       - name: Check package
         run: |
-          uv pip install dist/*.whl --force-reinstall
+          uv pip install --system dist/*.whl --force-reinstall
           python -c "from cli.main import app; print('Package import OK')"
 
       - name: Upload artifacts
