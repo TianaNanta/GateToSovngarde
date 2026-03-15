@@ -54,37 +54,38 @@ uv run gts --help
 ### Get Help
 ```bash
 gts --help
-gts import --help
+gts database --help
+gts database import --help
 ```
 
 ### Import Mods (Interactive Mode)
 ```bash
-gts import
+gts database import
 # Follow prompts for version, source, and destination
 ```
 
 ### Import Mods (Direct)
 ```bash
-gts import GTSv101 /path/to/mod/source /path/to/mod/destination
+gts database import GTSv101 /path/to/mod/source /path/to/mod/destination
 ```
 
 ### Import with Options
 ```bash
 # Force overwrite existing files
-gts import GTSv101 /source /dest --force
+gts database import GTSv101 /source /dest --force
 
 # Show detailed progress
-gts import GTSv101 /source /dest --verbose
+gts database import GTSv101 /source /dest --verbose
 
 # Combine options
-gts import GTSv101 /source /dest -f -v
+gts database import GTSv101 /source /dest -f -v
 ```
 
 ## Usage Examples
 
 ### Basic Import
 ```bash
-gts import GTSv101 ~/Mods/source ~/Mods/imported
+gts database import GTSv101 ~/Mods/source ~/Mods/imported
 ```
 
 **Output:**
@@ -98,7 +99,7 @@ gts import GTSv101 ~/Mods/source ~/Mods/imported
 ### Handling Errors
 If some mod files are missing:
 ```bash
-gts import GTSv101 ~/Mods/source ~/Mods/imported
+gts database import GTSv101 ~/Mods/source ~/Mods/imported
 ```
 
 **Output:**
@@ -117,7 +118,7 @@ Errors encountered:
 
 ### Force Overwrite
 ```bash
-gts import GTSv101 ~/Mods/source ~/Mods/imported --force
+gts database import GTSv101 ~/Mods/source ~/Mods/imported --force
 ```
 
 ## System Utilities
