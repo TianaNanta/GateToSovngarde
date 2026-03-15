@@ -31,7 +31,9 @@ class TestImportWorkflowBasic:
         (source / "Armor Collection.7z").write_text("armor mod archive content")
         (source / "Weapon Enhancement.7z").write_text("weapons mod archive content")
 
-        result = cli_runner.invoke(app, ["database", "import", "GTSv101", source_dir, dest_dir])
+        result = cli_runner.invoke(
+            app, ["database", "import", "GTSv101", source_dir, dest_dir]
+        )
 
         # Should succeed
         assert result.exit_code == 0
@@ -56,7 +58,9 @@ class TestImportWorkflowBasic:
         (source / "Quest Pack Alpha.7z").write_text("quest mod archive content")
         # Missing: Armor Collection and Weapon Enhancement archives
 
-        result = cli_runner.invoke(app, ["database", "import", "GTSv101", source_dir, dest_dir])
+        result = cli_runner.invoke(
+            app, ["database", "import", "GTSv101", source_dir, dest_dir]
+        )
 
         # Should indicate partial success or errors
         assert result.exit_code in (0, 2)  # Success or runtime error
@@ -101,7 +105,9 @@ class TestImportWorkflowErrorRecovery:
         (source / "Quest Pack Alpha.7z").write_text("new content")
         (dest / "Quest Pack Alpha.7z").write_text("old content")
 
-        result = cli_runner.invoke(app, ["database", "import", "GTSv101", source_dir, dest_dir])
+        result = cli_runner.invoke(
+            app, ["database", "import", "GTSv101", source_dir, dest_dir]
+        )
 
         # Should report error (file already exists)
         assert result.exit_code == 2 or "error" in result.stdout.lower()
@@ -176,7 +182,9 @@ class TestImportWorkflowStatistics:
         for file in files:
             (source / file).write_text(f"content for {file}")
 
-        result = cli_runner.invoke(app, ["database", "import", "GTSv101", source_dir, dest_dir])
+        result = cli_runner.invoke(
+            app, ["database", "import", "GTSv101", source_dir, dest_dir]
+        )
 
         assert result.exit_code == 0
         # Output should mention files copied
@@ -223,7 +231,9 @@ class TestImportWorkflowMultipleMods:
         for file in files:
             (source / file).write_text(f"content for {file}")
 
-        result = cli_runner.invoke(app, ["database", "import", "GTSv101", source_dir, dest_dir])
+        result = cli_runner.invoke(
+            app, ["database", "import", "GTSv101", source_dir, dest_dir]
+        )
 
         assert result.exit_code == 0
 
