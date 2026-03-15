@@ -28,6 +28,9 @@ jobs:
       - name: Build package
         run: uv build
 
+      - name: List built files
+        run: ls -la dist/
+
       - name: Check package
         run: |
           uv pip install --system dist/*.whl --force-reinstall
@@ -43,9 +46,6 @@ jobs:
     name: Publish to PyPI
     needs: build
     runs-on: ubuntu-latest
-    environment:
-      name: pypi
-      url: https://pypi.org/p/gatetosovngarde-cli
 
     permissions:
       id-token: write
@@ -59,27 +59,5 @@ jobs:
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-
-
-  publish-test:
-    name: Publish to Test PyPI
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: testpypi
-      url: https://test.pypi.org/p/gatetosovngarde-cli
-
-    permissions:
-      id-token: write
-
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
         with:
-          name: dist
-          path: dist/
-
-      - name: Publish to Test PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          repository-url: https://test.pypi.org/legacy/
+          verbose: true
