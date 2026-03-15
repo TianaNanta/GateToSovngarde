@@ -199,7 +199,7 @@ uv run pytest tests/ -v
 
 ## Project Status
 
-**Current Release**: v0.3.0 (Alpha)
+**Current Release**: v0.3.1 (Alpha)
 - ✅ Phase 1-4: Core CLI framework and import functionality
 - ✅ Phase 5: Package configuration and distribution
 - ✅ Phase 6-7: Extensibility and command organization
@@ -228,6 +228,9 @@ For issues, questions, or suggestions:
 - See DEVELOPMENT.md for troubleshooting
 
 ## Changelog
+
+### v0.3.1 (Mar 2026)
+- 🐛 Bug fixes and improvements
 
 ### v0.3.0 (Mar 2026)
 - ✨ **New Feature**: Merge duplicate case-insensitive folders
